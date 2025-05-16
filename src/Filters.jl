@@ -6,7 +6,7 @@ using StaticArrays
 export AbstractFilter, AbstractSequentialFilter, AbstractBatchFilter, AbstractSmoother,
     predict!, update!, estimate, predict, update,
     covariance, loglikelihood,
-    AbstractFilterCache
+    AbstractFilterCache, empty!, resize!
 include("interface.jl")
 include("cache.jl")
 

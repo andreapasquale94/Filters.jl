@@ -5,10 +5,10 @@ Classic linear Kalman filter.
 
 ----
 
-    KalmanFilter(n::Int, m::Int, nu::Int=0)
-    KalmanFilter{T}(n::Int, m::Int, nu::Int=0)
+    KalmanFilter(nx::Int, m::Int, nu::Int=0)
+    KalmanFilter{T}(nx::Int, m::Int, nu::Int=0)
 
-Create a Kalman filter with state dimension `n`, measurement dimension `m`, and optional control input dimension `nu`.
+Create a Kalman filter with state dimension `nx`, measurement dimension `m`, and optional control input dimension `nu`.
 """
 struct KalmanFilter{T} <: AbstractSequentialFilter{T}
     n::Int # state dimension
@@ -32,23 +32,27 @@ struct KalmanFilter{T} <: AbstractSequentialFilter{T}
     K::Matrix{T} # Kalman gain
 end
 
-function KalmanFilter{T}(n::Int, m::Int, nu::Int=0) where {T}
-    x0 = zeros(T, n)
-    P0 = Matrix{T}(I, n, n)
-    F0 = Matrix{T}(I, n, n)
-    H0 = zeros(T, m, n)
-    Q0 = Matrix{T}(I, n, n)
-    R0 = Matrix{T}(I, m, m)
-    B0 = nu > 0 ? zeros(T, n, nu) : nothing
-    D0 = nu > 0 ? zeros(T, m, nu) : nothing
+function KalmanFilter{T}(nx::Int, m::Int, x0, P0, F0, B0, Q0, H0, D0, R0) where {T}
     z0 = zeros(T, m)
     y0 = zeros(T, m)
     S0 = Matrix{T}(I, m, m)
-    K0 = zeros(T, n, m)
-    return KalmanFilter{T}(n, m, x0, P0, F0, B0, Q0, H0, D0, R0, z0, y0, S0, K0)
+    K0 = zeros(T, nx, m)
+    return KalmanFilter(nx, m, x0, P0, F0, B0, Q0, H0, D0, R0, z0, y0, S0, K0)
 end
 
-@inline KalmanFilter(n::Int, m::Int, nu::Int=0) = KalmanFilter{Float64}(n, m, nu)
+function KalmanFilter{T}(nx::Int, m::Int, nu::Int) where {T}
+    x0 = zeros(T, nx)
+    P0 = Matrix{T}(I, nx, nx)
+    F0 = Matrix{T}(I, nx, nx)
+    H0 = zeros(T, m, nx)
+    Q0 = Matrix{T}(I, nx, nx)
+    R0 = Matrix{T}(I, m, m)
+    B0 = nu > 0 ? zeros(T, nx, nu) : nothing
+    D0 = nu > 0 ? zeros(T, m, nu) : nothing
+    return KalmanFilter{T}(nx, m, x0, P0, F0, B0, Q0, H0, D0, R0)
+end
+
+@inline KalmanFilter(nx::Int, m::Int, nu::Int=0) = KalmanFilter{Float64}(nx, m, nu)
 
 # ==========================================================================================================
 # Methods
@@ -83,19 +87,19 @@ function update!(kf::KalmanFilter{T}, z::AbstractVector{T};
 
     # 3. Measurement prediction
     if Dₖ !== nothing && u !== nothing
-        kf.z = Hₖ .* kf.x .+ Dₖ .* u
+        kf.z .= Hₖ * kf.x .+ Dₖ * u
     else
-        kf.z .= Hₖ .* kf.x
+        kf.z .= Hₖ * kf.x
     end
 
     # Compute the innovation
     kf.y .= z .- kf.z
     # Compute the innovation covariance
-    PHᵀ = kf.P * Hₖ'
-    kf.S .= Hₖ * PHᵀ .+ Rₖ
+    PHT = kf.P * Hₖ'
+    kf.S .= Hₖ * PHT .+ Rₖ
 
     # 4. Compute the Kalman gain
-    kf.K .= PHᵀ / kf.S
+    kf.K .= PHT / kf.S
 
     # 5. State update
     kf.x .+= kf.K * kf.y
@@ -110,7 +114,7 @@ end
 @inline covariance(kf::KalmanFilter) = kf.P
 
 function loglikelihood(kf::KalmanFilter{T}) where T
-    chol = cholesky(kf.S)
+    chol = cholesky(Hermitian(kf.S))
     logdetS = 2sum(log, diag(chol.U))
     yS = chol \ kf.y
     return -0.5 * (kf.n * log(2π) + logdetS + dot(yS, yS))
