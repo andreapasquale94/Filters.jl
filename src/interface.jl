@@ -52,7 +52,7 @@ Return the observation dimension of the filter.
 
 Return the control input dimension of the filter. 
 """
-@inline nu(::AbstractFilter) = throw(MethodError(nu, (filter,)))
+@inline nu(filter::AbstractFilter) = throw(MethodError(nu, (filter,)))
 
 """
     islinear(filter::AbstractFilter)::Bool 
