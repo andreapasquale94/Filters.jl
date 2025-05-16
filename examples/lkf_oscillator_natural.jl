@@ -8,24 +8,21 @@ Plots.gr()
 # ẍ + 2*γ*ẋ + ω₀²*x = 0
 # ------------------------------------------------------------------------------
 # Model parameters
-m = 50
-c = 2
-k = 4
-ω₀ = sqrt(k / m)  # Natural frequency
-γ = c / (2 * m)  # Damping ratio
+ω₀ = 1.0  # Natural frequency
+γ = 0.1  # Damping ratio
 
 # Noise parameters
-Bₚ = [0, 1 / m]
-σₚ² = 0.1     # Process noise covariance
+Bₚ = [0, 1]
+σₚ² = 1e-3     # Process noise covariance
 σₘ² = 1e-4     # Measurement noise covariance
 
 # Initial conditions
 x₀ = [1.0, 0.0]             # Initial (true) state
-P₀ = [0.1 0.0; 0.0 1e-4]    # Initial estimate covariance
+P₀ = [0.1 0.0; 0.0 1e-3]    # Initial estimate covariance
 
 # Time parameters
 ΔT = 0.1
-Tf = 300.0
+Tf = 50.0
 # ==============================================================================
 
 # Model
@@ -77,14 +74,22 @@ end
 
 # ----
 # Collect results and plot
+t = collect(dt)
 x̂ = hcat(cache.x...) # Estimated state
+confidence = hcat(cache.con...) # Confidence intervals
 
-p1 = plot(collect(dt), xt[1, :], label="True", xlabel="\$t\$", ylabel="\$x(t)\$");
-plot!(p1, collect(dt), x[1, 1:end-1], label="Simulated");
-p2 = plot(collect(dt), xt[2, :], label="True", xlabel="\$t\$", ylabel="\$\\dot{x}(t)\$");
-plot!(p2, collect(dt), x[2, 1:end-1], label="Simulated");
+# Position plot
+p1 = plot(t, xt[1, :], label="True")
+plot!(p1, t, x[1, 1:end-1], label="Simulated", xlabel="\$t\$", ylabel="\$x(t)\$")
+plot!(p1, t, x̂[1, :], label="Estimate", ribbon=confidence[1, :], fillalpha=0.15)
+plot!(p1, t, x̂[1, :] + confidence[1, :], label=nothing, linestyle=:dash, color=:gray)
+plot!(p1, t, x̂[1, :] - confidence[1, :], label=nothing, linestyle=:dash, color=:gray)
 
-plot!(p1, collect(dt), x̂[1, :], label="Estimated");
-plot!(p2, collect(dt), x̂[2, :], label="Estimated");
+# Velocity plot
+p2 = plot(t, xt[2, :], label="True")
+plot!(p2, t, x[2, 1:end-1], label="Simulated", xlabel="\$t\$", ylabel="\$\\dot{x}(t)\$")
+plot!(p2, t, x̂[2, :], label="Estimated", ribbon=confidence[2, :], fillalpha=0.15)
+plot!(p2, t, x̂[2, :] + confidence[2, :], label=nothing, linestyle=:dash, color=:gray)
+plot!(p2, t, x̂[2, :] - confidence[2, :], label=nothing, linestyle=:dash, color=:gray)
+
 plot(p1, p2, layout=(2, 1), size=(1000, 800))
-
