@@ -6,21 +6,21 @@ This is an abstract type that serves as a base for all filter types in the packa
 abstract type AbstractFilter{T} end
 
 """
-    AbstractSequentialFilter
+    AbstractSequentialFilter{T}
 
 This is an abstract type that serves as a base for all sequential filter types in the package.
 """
 abstract type AbstractSequentialFilter{T} <: AbstractFilter{T} end
 
 """
-    AbstractBatchFilter
+    AbstractBatchFilter{T}
 
 This is an abstract type that serves as a base for all batch filter types in the package.
 """
 abstract type AbstractBatchFilter{T} <: AbstractFilter{T} end
 
 """
-    AbstractSmoother
+    AbstractSmoother{T}
 
 This is an abstract type that serves as a base for all smoother types in the package.
 """
@@ -31,7 +31,7 @@ abstract type AbstractSmoother{T} <: AbstractFilter{T} end
 
 Return the type of the filter's state.
 """
-@inline ftype(::AbstractFilter{T}) = T
+@inline ftype(::AbstractFilter{T}) where T = T
 
 """
     nx(filter::AbstractFilter)::Int
