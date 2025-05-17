@@ -4,12 +4,13 @@ using Plots
 Plots.gr()
 
 # ==============================================================================
-# Damped harmonic oscillator, natural response 
-# ẍ + 2*γ*ẋ + ω₀²*x = 0
+# Damped harmonic oscillator
+# ẍ + 2*γ*ẋ + ω₀²*x = cos(ω*t)
 # ------------------------------------------------------------------------------
 # Model parameters
 ω₀ = 1.0  # Natural frequency
 γ = 0.1  # Damping ratio
+ω = 0.5 # Forcing frequency
 
 # Noise parameters
 Bₚ = [0, 1]
@@ -32,12 +33,15 @@ nt = length(dt)
 F = [0 1; -ω₀^2 -2*γ]    # System matrix
 H = [1. 0]               # Measurement matrix
 nz = size(H, 1)          # Number of measurements
+B = [0 1]'               # Input matrix
 # Disturbaces
 Q = Matrix(σₚ² * I(nx))  # Process noise covariance
 R = Matrix(σₘ² * I(nz))  # Measurement noise covariance
 
 # Exact solution
-exact(t) = exp(F * t) * x₀
+A_ω = 1 / sqrt((ω₀^2 - ω^2) + (2γ * ω)^2) # Forced response amplitude
+ϕ_ω = atan(2 * γ * ω / (ω₀^2 - ω^2)) # Forced response phase
+exact(t) = exp(F * t) * x₀ + A_ω * [cos(ω * t - ϕ_ω), -ω * sin(ω * t - ϕ_ω)]
 xt = hcat([exact(t) for t in dt]...) # True state
 
 # Discrete model
@@ -46,29 +50,31 @@ C = exp(Z * ΔT)
 Fₖ = Matrix(C[nx+1:end, nx+1:end]')
 Qₖ = Fₖ * C[1:nx, nx+1:end]
 Rₖ = R / ΔT
+Bₖ = inv(F) * (Fₖ - I(nx)) * B
 
 # ----
 # Prepare measurements 
 x = zeros(nx, nt + 1)
 x[:, 1] = x₀
 z = zeros(nz, nt + 1)
+u = cos.(ω * dt)
 
 CQₖ = cholesky(Hermitian(Qₖ)).L
 CRₖ = cholesky(Hermitian(Rₖ)).L
 
 for i in 1:nt
-    x[:, i+1] .= Fₖ * x[:, i] .+ CQₖ * randn(nx)
+    x[:, i+1] .= Fₖ * x[:, i] .+ Bₖ * u[i] .+ CQₖ * randn(nx)
     z[:, i] .= H * x[:, i] .+ CRₖ * randn(nz)
 end
 
 # ----
 # Create and run the Kalman filter
-kf = KalmanFilter{Float64}(nx, nz, x₀, P₀, Fₖ, nothing, Qₖ, H, nothing, Rₖ)
+kf = KalmanFilter{Float64}(nx, nz, x₀, P₀, Fₖ, Bₖ, Qₖ, H, nothing, Rₖ)
 cache = KalmanFilterCache(kf)
 resize!(cache, nt)
 
 for i in 2:nt
-    predict!(cache)
+    predict!(cache; u=u[i])
     update!(cache, z[:, i])
 end
 
