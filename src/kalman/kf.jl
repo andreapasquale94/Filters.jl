@@ -73,6 +73,13 @@ end
 @inline nu(filter::KalmanFilter) = filter.B === nothing ? 0 : size(filter.B, 2)
 @inline islinear(filter::KalmanFilter) = true
 
+function Base.show(io::IO, kf::KalmanFilter{T}) where T
+    println(io, "KalmanFilter{$T}")
+    println(io, " x̂: ", estimate(kf))
+    println(io, " P: ", covariance(kf))
+    return
+end
+
 # ==========================================================================================================
 
 function predict!(kf::KalmanFilter{T}; u=nothing, F=nothing, Q=nothing, B=nothing) where {T}

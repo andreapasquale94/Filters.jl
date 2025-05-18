@@ -64,7 +64,7 @@ function SquareRootKalmanFilter{T}(
     K0 = zeros(T, nx, m)
     return SquareRootKalmanFilter(
         nx, m,
-        x0, LowerTriangular(sqrtP0),
+        copy(x0), LowerTriangular(copy(sqrtP0)),
         F0, B0, LowerTriangular(sqrtQ0),
         H0, D0, LowerTriangular(sqrtR0),
         z0, y0, S0, K0)
@@ -76,6 +76,13 @@ end
 @inline nz(filter::SquareRootKalmanFilter) = filter.m
 @inline nu(filter::SquareRootKalmanFilter) = filter.B === nothing ? 0 : size(filter.B, 2)
 @inline islinear(filter::SquareRootKalmanFilter) = true
+
+function Base.show(io::IO, kf::SquareRootKalmanFilter{T}) where T
+    println(io, "SquareRootKalmanFilter{$T}")
+    println(io, " x̂: ", estimate(kf))
+    println(io, " P: ", covariance(kf))
+    return
+end
 
 # ==========================================================================================================
 
@@ -127,9 +134,9 @@ function update!(kf::SquareRootKalmanFilter{T}, z::AbstractVector{T};
     # State update
     kf.x .+= kf.K * kf.y
     # Covariance cholesky factor update
-    KR = kf.K * sqrtRₖ
-    Uₖ = cholesky(KR * KR').L
-    kf.sqrtP .= LowerTriangular(cholesky_downdate!(kf.sqrtP, Uₖ))
+    Uₖ = kf.K * sqrtRₖ'
+    cholesky_downdate!(kf.sqrtP, Uₖ)
+    nothing
 end
 
 @inline estimate(kf::SquareRootKalmanFilter) = kf.x

@@ -53,6 +53,11 @@ function KalmanFilterCache(filter::F) where F
     return KFCache(filter, x, cov, log, con)
 end
 
+function Base.show(io::IO, c::KalmanFilterCache{F, T}) where {F, T}
+    println(io, "KalmanFilterCache{$T} for $F with size $(length(c.x))")
+    nothing
+end
+
 """
     KalmanFilterSCache{F, N, T}
 
