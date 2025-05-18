@@ -3,6 +3,8 @@ module Filters
 using LinearAlgebra
 using StaticArrays
 
+include("utils/linalg.jl")
+
 export AbstractFilter, AbstractSequentialFilter, AbstractBatchFilter, AbstractSmoother,
     predict!, update!, estimate, predict, update,
     covariance, loglikelihood,
