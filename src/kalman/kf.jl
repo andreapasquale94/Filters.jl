@@ -8,7 +8,7 @@ This filter maintains and updates the estimate of the hidden system state based 
 control inputs and noisy observations. It models the system using standard time-invariant
 Kalman filter equations:
 
-- **State transition**:  `xₖ = F*xₖ₋₁ + B*uₖ + wₖ`,    where `wₖ ∼ 𝒩(0, Qₖ)`
+- **State transition**:  `xₖ = F*xₖ₋₁ + B*uₖ + wₖ`,  where `wₖ ∼ 𝒩(0, Qₖ)`
 - **Observation**:       `zₖ = H*xₖ + D*uₖ + vₖ`,    where `vₖ ∼ 𝒩(0, Rₖ)`
 
 ### Fields
@@ -82,40 +82,31 @@ end
 
 # ==========================================================================================================
 
-function predict!(kf::KalmanFilter{T}; u=nothing, F=nothing, Q=nothing, B=nothing) where {T}
-    Fₖ = F === nothing ? kf.F : F
-    Qₖ = Q === nothing ? kf.Q : Q
-    Bₖ = B === nothing ? kf.B : B
+function predict!(kf::KalmanFilter{T}; u=nothing) where {T}
     # 1. State prediction time update
-    if Bₖ !== nothing && u !== nothing
-        kf.x .= Fₖ * kf.x .+ Bₖ * u
+    if kf.B !== nothing && u !== nothing
+        kf.x .= kf.F * kf.x .+ kf.B * u
     else
-        kf.x .= Fₖ * kf.x
+        kf.x .= kf.F * kf.x
     end
     # 2. Covariance prediction time update
-    kf.P .= Fₖ * kf.P * Fₖ' .+ Qₖ
+    kf.P .= kf.F * kf.P * kf.F' .+ Q
     return nothing
 end
 
-function update!(kf::KalmanFilter{T}, z::AbstractVector{T};
-    u=nothing, D=nothing, H=nothing, R=nothing) where {T}
-
-    Hₖ = H === nothing ? kf.H : H
-    Rₖ = R === nothing ? kf.R : R
-    Dₖ = D === nothing ? kf.D : D
-
+function update!(kf::KalmanFilter{T}, z::AbstractVector{T}; u=nothing) where {T}
     # 3. Measurement prediction
-    if Dₖ !== nothing && u !== nothing
-        kf.z .= Hₖ * kf.x .+ Dₖ * u
+    if kf.D !== nothing && u !== nothing
+        kf.z .= kf.H * kf.x .+ kf.D * u
     else
-        kf.z .= Hₖ * kf.x
+        kf.z .= kf.H * kf.x
     end
 
     # Compute the innovation
     kf.y .= z .- kf.z
     # Compute the innovation covariance
-    PHT = kf.P * Hₖ'
-    kf.S .= Hₖ * PHT .+ Rₖ
+    PHT = kf.P * kf.H'
+    kf.S .= kf.H * PHT .+ kf.R
 
     # 4. Compute the Kalman gain
     kf.K .= PHT / kf.S
@@ -124,8 +115,8 @@ function update!(kf::KalmanFilter{T}, z::AbstractVector{T};
     kf.x .+= kf.K * kf.y
 
     # 6. Covariance update
-    IKH = I - kf.K * Hₖ
-    kf.P .= IKH * kf.P * IKH' .+ kf.K * Rₖ * kf.K'
+    IKH = I - kf.K * kf.H
+    kf.P .= IKH * kf.P * IKH' .+ kf.K * kf.R * kf.K'
     return nothing
 end
 

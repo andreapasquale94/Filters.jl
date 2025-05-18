@@ -9,7 +9,7 @@ lower-triangular Cholesky factors of the covariance matrices.
 
 The system is defined by:
 
-- **State transition**:  `xₖ = F*xₖ₋₁ + B*uₖ + wₖ`,    where `wₖ ∼ 𝒩(0, Qₖ)`
+- **State transition**:  `xₖ = F*xₖ₋₁ + B*uₖ + wₖ`,  where `wₖ ∼ 𝒩(0, Qₖ)`
 - **Observation**:       `zₖ = H*xₖ + D*uₖ + vₖ`,    where `vₖ ∼ 𝒩(0, Rₖ)`
 
 ### Fields
@@ -39,7 +39,7 @@ These fields store intermediate quantities from the *most recent measurement upd
 - `sqrtS` — Cholesky factor of innovation covariance.
 - `K` — Kalman gain from the last update.
 """
-struct SquareRootKalmanFilter{T} <: AbstractSequentialFilter{T}
+struct SquareRootKalmanFilter{T} <: AbstractKalmanFilter{T}
     n::Int
     m::Int
     x::Vector{T}
@@ -91,57 +91,46 @@ end
 
 # ==========================================================================================================
 
-function predict!(kf::SquareRootKalmanFilter{T};
-    u=nothing, F=nothing, sqrtQ=nothing, B=nothing) where {T}
-    Fₖ = F === nothing ? kf.F : F
-    sqrtQₖ = sqrtQ === nothing ? kf.sqrtQ : sqrtQ
-    Bₖ = B === nothing ? kf.B : B
-
+function predict!(kf::SquareRootKalmanFilter{T}; u=nothing) where {T}
     # Predict the state
-    if Bₖ !== nothing && u !== nothing
-        kf.x .= Fₖ * kf.x .+ Bₖ * u
+    if kf.B !== nothing && u !== nothing
+        kf.x .= kf.F * kf.x .+ kf.B * u
     else
-        kf.x .= Fₖ * kf.x
+        kf.x .= kf.F * kf.x
     end
 
     # Predict covariance via QR of [F * sqrtP  sqrtQ]
-    mul!(@views(kf.M[1:kf.n, 1:kf.n]), Fₖ, kf.sqrtP)
-    copyto!(@views(kf.M[1:kf.n, kf.n+1:2kf.n]), sqrtQₖ)
+    mul!(@views(kf.M[1:kf.n, 1:kf.n]), kf.F, kf.sqrtP)
+    copyto!(@views(kf.M[1:kf.n, kf.n+1:2kf.n]), kf.sqrtQ)
     _, R̃ = qr!(kf.M[1:kf.n, 1:2kf.n]')
     kf.sqrtP .= LowerTriangular(R̃')
     return nothing
 end
 
-function update!(kf::SquareRootKalmanFilter{T}, z::AbstractVector{T};
-    u=nothing, D=nothing, H=nothing, sqrtR=nothing) where {T}
-
-    Hₖ = H === nothing ? kf.H : H
-    sqrtRₖ = sqrtR === nothing ? kf.sqrtR : sqrtR
-    Dₖ = D === nothing ? kf.D : D
-
+function update!(kf::SquareRootKalmanFilter{T}, z::AbstractVector{T}; u=nothing) where {T}
     # Measurement prediction
-    if Dₖ !== nothing && u !== nothing
-        kf.z .= Hₖ * kf.x .+ Dₖ * u
+    if kf.D !== nothing && u !== nothing
+        kf.z .= kf.H * kf.x .+ kf.D * u
     else
-        kf.z .= Hₖ * kf.x
+        kf.z .= kf.H * kf.x
     end
 
     # Innovation
     kf.y .= z .- kf.z
 
     # Innovation covariance cholesky factor
-    mul!(@views(kf.M[1:kf.m, 1:kf.n]), Hₖ, kf.sqrtP)
-    copyto!(@views(kf.M[1:kf.m, kf.n+1:(kf.n+kf.m)]), sqrtRₖ)
+    mul!(@views(kf.M[1:kf.m, 1:kf.n]), kf.H, kf.sqrtP)
+    copyto!(@views(kf.M[1:kf.m, kf.n+1:(kf.n+kf.m)]), kf.sqrtR)
     _, R̃ = qr!(kf.M[1:kf.m, 1:(kf.n+kf.m)]')
     kf.sqrtS .= LowerTriangular(R̃')
 
     # Kalman gain
-    kf.K .= ((kf.sqrtP * (Hₖ * kf.sqrtP)') / kf.sqrtS') / kf.sqrtS
+    kf.K .= ((kf.sqrtP * (kf.H * kf.sqrtP)') / kf.sqrtS') / kf.sqrtS
 
     # State update
     kf.x .+= kf.K * kf.y
     # Covariance cholesky factor update
-    kf.U .= kf.K * sqrtRₖ'
+    kf.U .= kf.K * kf.sqrtR'
     cholesky_downdate!(kf.sqrtP, kf.U)
     nothing
 end
