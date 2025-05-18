@@ -53,31 +53,12 @@ function KalmanFilterCache(filter::F) where F
     return KFCache(filter, x, cov, log, con)
 end
 
-function Base.show(io::IO, c::KalmanFilterCache{F, T}) where {F, T}
+function Base.show(io::IO, c::KalmanFilterCache{F,T}) where {F,T}
     println(io, "KalmanFilterCache{$T} for $F with size $(length(c.x))")
     nothing
 end
 
-"""
-    KalmanFilterSCache{F, N, T}
-
-A cache for Kalman filters with static arrays.
-The cache stores the state estimate, covariance, log-likelihood, and confidence intervals for each update step.
-"""
-const KalmanFilterSCache{F,N,T} = KFCache{F,Vector{SVector{N,T}},Vector{SMatrix{N,N,T}},Vector{T}}
-
-function KalmanFilterSCache(filter::F) where F
-    T = ftype(filter)
-    N = nx(filter)
-    x = Vector{SVector{N,T}}(undef, 0)
-    cov = Vector{SMatrix{N,N,T}}(undef, 0)
-    log = Vector{T}(undef, 0)
-    con = Vector{SVector{N,T}}(undef, 0)
-    return KFCache(filter, x, cov, log, con)
-end
-
-function update!(cache::KalmanFilterCache{F,T}, z; kwargs...) where {F,T}
-    update!(cache.f, z; kwargs...)
+function update_cache!(cache::KalmanFilterCache{F,T}; kwargs...) where {F,T}
     x̂ = estimate(cache.f)
     P = covariance(cache.f)
 
@@ -98,24 +79,30 @@ function update!(cache::KalmanFilterCache{F,T}, z; kwargs...) where {F,T}
     return nothing
 end
 
-function update!(cache::KalmanFilterSCache{F,N,T}, z; kwargs...) where {F,N,T}
+function update!(cache::KalmanFilterCache{F,T}, z; kwargs...) where {F,T}
     update!(cache.f, z; kwargs...)
-    x̂ = estimate(cache.f)
-    P = covariance(cache.f)
-
-    cache.k += 1 # update the index
-    if cache.k > length(cache.x)
-        # If the cache is full, resize it
-        push!(cache.x, SVector{N,T}(x̂))
-        push!(cache.cov, SMatrix{N,N,T}(P))
-        push!(cache.log, loglikelihood(cache.f))
-        push!(cache.con, SVector{N,T}(3sqrt.(diag(P))))
-    else
-        # If the cache is not full, just update the existing elements
-        cache.x[cache.k] = SVector{N,T}(x̂)
-        cache.cov[cache.k] = SMatrix{N,N,T}(P)
-        cache.log[cache.k] = loglikelihood(cache.f)
-        cache.con[cache.k] = SVector{N,T}(3sqrt.(diag(P)))
-    end
-    return nothing
+    update_cache!(cache; kwargs...)
 end
+
+function update!(cache::KalmanFilterCache{F,T}, i, z; kwargs...) where {F,T}
+    update!(cache.f, i, z; kwargs...)
+    update_cache!(cache; kwargs...)
+end
+
+# """
+#     KalmanFilterSCache{F, N, T}
+
+# A cache for Kalman filters with static arrays.
+# The cache stores the state estimate, covariance, log-likelihood, and confidence intervals for each update step.
+# """
+# const KalmanFilterSCache{F,N,T} = KFCache{F,Vector{SVector{N,T}},Vector{SMatrix{N,N,T}},Vector{T}}
+
+# function KalmanFilterSCache(filter::F) where F
+#     T = ftype(filter)
+#     N = nx(filter)
+#     x = Vector{SVector{N,T}}(undef, 0)
+#     cov = Vector{SMatrix{N,N,T}}(undef, 0)
+#     log = Vector{T}(undef, 0)
+#     con = Vector{SVector{N,T}}(undef, 0)
+#     return KFCache(filter, x, cov, log, con)
+# end

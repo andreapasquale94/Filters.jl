@@ -15,12 +15,16 @@ function predict!(cf::AbstractFilterCache; kwargs...)
 end
 
 """
-    update!(cf::AbstractFilterCache, z; kwargs...)
+    update!(cf::AbstractFilterCache, i, z; kwargs...)
 
 Perform the measurement-update step (posterior) and store the result in the cache.
 """
 function update!(cf::AbstractFilterCache, z; kwargs...)
     throw(MethodError(update!, (filter, z)))
+end
+
+function update!(cf::AbstractFilterCache, i, z; kwargs...)
+    throw(MethodError(update!, (filter, i, z)))
 end
 
 """

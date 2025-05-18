@@ -84,6 +84,15 @@ function update!(filter::AbstractFilter, z; kwargs...)
 end
 
 """
+    update!(filter::AbstractFilter, i::Int, z::Real; kwargs...)
+
+Perform the i-th measurement-update step (*posterior*).
+"""
+function update!(filter::AbstractFilter, i, z; kwargs...)
+    throw(MethodError(update!, (filter, z)))
+end
+
+"""
     estimate(filter::AbstractFilter)
 
 Return the current best estimate of the state.

@@ -120,6 +120,36 @@ function update!(kf::KalmanFilter{T}, z::AbstractVector{T}; u=nothing) where {T}
     return nothing
 end
 
+function update!(kf::KalmanFilter{T}, i::Int, z::Real; u=nothing) where T
+    Hi = view(kf.H, i, :)
+    Di = kf.D === nothing ? nothing : view(kf.D, i, :)
+    Ri = kf.R[i, i]
+
+    # Predicted measurement
+    zi = dot(Hi, kf.x)
+    if Di !== nothing && u !== nothing
+        zi += dot(Di, u)
+    end
+    kf.z[i] = zi
+    kf.y[i] = z - zi
+
+    # Innovation covariance
+    Si = dot(Hi, kf.P * Hi) + Ri
+    kf.S[i, i] = Si
+
+    # Kalman gain
+    kf.K[:, i] .= (kf.P * Hi) / Si
+    Ki = view(kf.K, :, i)
+
+    # State update
+    kf.x .+= Ki * kf.y[i]
+
+    # Covariance update
+    IKH = I - Ki * Hi'
+    kf.P .= IKH * kf.P * IKH' + Ki * Ri * Ki'
+    nothing
+end
+
 @inline estimate(kf::KalmanFilter) = kf.x
 @inline covariance(kf::KalmanFilter) = kf.P
 
