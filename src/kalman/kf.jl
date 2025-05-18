@@ -90,7 +90,7 @@ function predict!(kf::KalmanFilter{T}; u=nothing) where {T}
         kf.x .= kf.F * kf.x
     end
     # 2. Covariance prediction time update
-    kf.P .= kf.F * kf.P * kf.F' .+ Q
+    kf.P .= kf.F * kf.P * kf.F' .+ kf.Q
     return nothing
 end
 
