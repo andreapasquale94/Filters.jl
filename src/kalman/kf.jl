@@ -27,7 +27,7 @@ struct KalmanFilter{T} <: AbstractSequentialFilter{T}
 
     # diagnostics from the last update
     z::Vector{T} # measurement prediction
-    y::Vector{T} # residual
+    y::Vector{T} # innovation
     S::Matrix{T} # innovation covariance
     K::Matrix{T} # Kalman gain
 end
@@ -39,20 +39,6 @@ function KalmanFilter{T}(nx::Int, m::Int, x0, P0, F0, B0, Q0, H0, D0, R0) where 
     K0 = zeros(T, nx, m)
     return KalmanFilter(nx, m, x0, P0, F0, B0, Q0, H0, D0, R0, z0, y0, S0, K0)
 end
-
-function KalmanFilter{T}(nx::Int, m::Int, nu::Int) where {T}
-    x0 = zeros(T, nx)
-    P0 = Matrix{T}(I, nx, nx)
-    F0 = Matrix{T}(I, nx, nx)
-    H0 = zeros(T, m, nx)
-    Q0 = Matrix{T}(I, nx, nx)
-    R0 = Matrix{T}(I, m, m)
-    B0 = nu > 0 ? zeros(T, nx, nu) : nothing
-    D0 = nu > 0 ? zeros(T, m, nu) : nothing
-    return KalmanFilter{T}(nx, m, x0, P0, F0, B0, Q0, H0, D0, R0)
-end
-
-@inline KalmanFilter(nx::Int, m::Int, nu::Int=0) = KalmanFilter{Float64}(nx, m, nu)
 
 # ==========================================================================================================
 # Methods
