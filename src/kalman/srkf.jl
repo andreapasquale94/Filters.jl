@@ -54,6 +54,8 @@ struct SquareRootKalmanFilter{T} <: AbstractSequentialFilter{T}
     y::Vector{T}
     sqrtS::LowerTriangular{T}
     K::Matrix{T}
+    M::Matrix{T}
+    U::Matrix{T}
 end
 
 function SquareRootKalmanFilter{T}(
@@ -62,12 +64,15 @@ function SquareRootKalmanFilter{T}(
     y0 = zeros(T, m)
     S0 = LowerTriangular(Matrix{T}(I, m, m))
     K0 = zeros(T, nx, m)
+
+    M = zeros(T, max(nx, m), 2max(nx, m))
+    U = zeros(T, nx, m)
     return SquareRootKalmanFilter(
         nx, m,
         copy(x0), LowerTriangular(copy(sqrtP0)),
         F0, B0, LowerTriangular(sqrtQ0),
         H0, D0, LowerTriangular(sqrtR0),
-        z0, y0, S0, K0)
+        z0, y0, S0, K0, M, U)
 end
 
 # ==========================================================================================================
@@ -99,8 +104,10 @@ function predict!(kf::SquareRootKalmanFilter{T};
         kf.x .= Fₖ * kf.x
     end
 
-    A = [Fₖ * kf.sqrtP sqrtQₖ]
-    _, R̃ = qr(A')
+    # Predict covariance via QR of [F * sqrtP  sqrtQ]
+    mul!(@views(kf.M[1:kf.n, 1:kf.n]), Fₖ, kf.sqrtP)
+    copyto!(@views(kf.M[1:kf.n, kf.n+1:2kf.n]), sqrtQₖ)
+    _, R̃ = qr!(kf.M[1:kf.n, 1:2kf.n]')
     kf.sqrtP .= LowerTriangular(R̃')
     return nothing
 end
@@ -123,19 +130,19 @@ function update!(kf::SquareRootKalmanFilter{T}, z::AbstractVector{T};
     kf.y .= z .- kf.z
 
     # Innovation covariance cholesky factor
-    A = [Hₖ * kf.sqrtP sqrtRₖ]
-    _, R̃ = qr(A')
+    mul!(@views(kf.M[1:kf.m, 1:kf.n]), Hₖ, kf.sqrtP)
+    copyto!(@views(kf.M[1:kf.m, kf.n+1:(kf.n+kf.m)]), sqrtRₖ)
+    _, R̃ = qr!(kf.M[1:kf.m, 1:(kf.n+kf.m)]')
     kf.sqrtS .= LowerTriangular(R̃')
 
     # Kalman gain
-    PHT = kf.sqrtP * (Hₖ * kf.sqrtP)'
-    kf.K .= (PHT / kf.sqrtS') / kf.sqrtS
+    kf.K .= ((kf.sqrtP * (Hₖ * kf.sqrtP)') / kf.sqrtS') / kf.sqrtS
 
     # State update
     kf.x .+= kf.K * kf.y
     # Covariance cholesky factor update
-    Uₖ = kf.K * sqrtRₖ'
-    cholesky_downdate!(kf.sqrtP, Uₖ)
+    kf.U .= kf.K * sqrtRₖ'
+    cholesky_downdate!(kf.sqrtP, kf.U)
     nothing
 end
 
