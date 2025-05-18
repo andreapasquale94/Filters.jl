@@ -1,35 +1,59 @@
 """
-    KalmanFilter
+    KalmanFilter{T}
 
-Classic linear Kalman filter.
+Classic (linear) Kalman filter for estimating the state of a linear dynamical system
+with Gaussian noise.
 
-----
+This filter maintains and updates the estimate of the hidden system state based on
+control inputs and noisy observations. It models the system using standard time-invariant
+Kalman filter equations:
 
-    KalmanFilter(nx::Int, m::Int, nu::Int=0)
-    KalmanFilter{T}(nx::Int, m::Int, nu::Int=0)
+- **State transition**:  `xₖ = F*xₖ₋₁ + B*uₖ + wₖ`,    where `wₖ ∼ 𝒩(0, Qₖ)`
+- **Observation**:       `zₖ = H*xₖ + D*uₖ + vₖ`,    where `vₖ ∼ 𝒩(0, Rₖ)`
 
-Create a Kalman filter with state dimension `nx`, measurement dimension `m`, and optional control input dimension `nu`.
+# Fields
+
+## Dimensions
+- `n` — Dimension of the state vector `x`.
+- `m` — Dimension of the measurement vector `z`.
+
+## State Estimate
+- `x` — Current estimate of the system state.
+- `P` — Current estimate of the error covariance of the state estimate.
+
+## Model Matrices
+- `F` — State transition matrix (maps state from previous to current step).
+- `B` — Control input matrix (maps control `u` to state). May be `nothing` if unused.
+- `Q` — Process noise covariance matrix.
+- `H` — Observation matrix (maps state to measurement space).
+- `D` — Control-to-measurement matrix. May be `nothing` if unused.
+- `R` — Observation noise covariance matrix.
+
+## Diagnostics
+These fields store intermediate quantities from the *most recent measurement update* 
+(useful for debugging or adaptive filtering):
+
+- `z` — Predicted measurement.
+- `y` — Innovation (residual): `y = z - ̂z`.
+- `S` — Innovation covariance.
+- `K` — Kalman gain.
+
 """
 struct KalmanFilter{T} <: AbstractSequentialFilter{T}
-    n::Int # state dimension
-    m::Int # measurement dimension
-
-    x::Vector{T} # current state estimate 
-    P::Matrix{T} # current error covariance
-
-    # model
+    n::Int
+    m::Int
+    x::Vector{T}
+    P::Matrix{T}
     F::Matrix{T}
     B::Union{Matrix{T},Nothing}
     Q::Matrix{T}
     H::Matrix{T}
     D::Union{Matrix{T},Nothing}
     R::Matrix{T}
-
-    # diagnostics from the last update
-    z::Vector{T} # measurement prediction
-    y::Vector{T} # innovation
-    S::Matrix{T} # innovation covariance
-    K::Matrix{T} # Kalman gain
+    z::Vector{T}
+    y::Vector{T}
+    S::Matrix{T}
+    K::Matrix{T}
 end
 
 function KalmanFilter{T}(nx::Int, m::Int, x0, P0, F0, B0, Q0, H0, D0, R0) where {T}
@@ -41,13 +65,13 @@ function KalmanFilter{T}(nx::Int, m::Int, x0, P0, F0, B0, Q0, H0, D0, R0) where 
 end
 
 # ==========================================================================================================
-# Methods
-# ==========================================================================================================
 
 @inline nx(filter::KalmanFilter) = filter.n
 @inline nz(filter::KalmanFilter) = filter.m
 @inline nu(filter::KalmanFilter) = filter.B === nothing ? 0 : size(filter.B, 2)
 @inline islinear(filter::KalmanFilter) = true
+
+# ==========================================================================================================
 
 function predict!(kf::KalmanFilter{T}; u=nothing, F=nothing, Q=nothing, B=nothing) where {T}
     Fₖ = F === nothing ? kf.F : F
