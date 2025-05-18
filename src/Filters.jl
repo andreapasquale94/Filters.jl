@@ -15,10 +15,15 @@ include("cache.jl")
 # ==========================================================================================================
 # Kalman filters
 
+include("kalman/interface.jl")
+
 export KalmanFilterCache, KalmanFilterSCache
 include("kalman/cache.jl")
 
 export KalmanFilter
 include("kalman/kf.jl")
+
+export SquareRootKalmanFilter
+include("kalman/srkf.jl")
 
 end

@@ -101,8 +101,8 @@ function update!(cache::KalmanFilterSCache{F,N,T}, z; kwargs...) where {F,N,T}
     cache.k += 1 # update the index
     if cache.k > length(cache.x)
         # If the cache is full, resize it
-        push!(cache.x, SVector{N,T}(copy(x̂)))
-        push!(cache.cov, SMatrix{N,N,T}(copy(P)))
+        push!(cache.x, SVector{N,T}(x̂))
+        push!(cache.cov, SMatrix{N,N,T}(P))
         push!(cache.log, loglikelihood(cache.f))
         push!(cache.con, SVector{N,T}(3sqrt.(diag(P))))
     else

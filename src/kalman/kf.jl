@@ -11,17 +11,17 @@ Kalman filter equations:
 - **State transition**:  `xₖ = F*xₖ₋₁ + B*uₖ + wₖ`,    where `wₖ ∼ 𝒩(0, Qₖ)`
 - **Observation**:       `zₖ = H*xₖ + D*uₖ + vₖ`,    where `vₖ ∼ 𝒩(0, Rₖ)`
 
-# Fields
+### Fields
 
-## Dimensions
+#### Dimensions
 - `n` — Dimension of the state vector `x`.
 - `m` — Dimension of the measurement vector `z`.
 
-## State Estimate
+#### State estimate
 - `x` — Current estimate of the system state.
 - `P` — Current estimate of the error covariance of the state estimate.
 
-## Model Matrices
+#### Model 
 - `F` — State transition matrix (maps state from previous to current step).
 - `B` — Control input matrix (maps control `u` to state). May be `nothing` if unused.
 - `Q` — Process noise covariance matrix.
@@ -29,7 +29,7 @@ Kalman filter equations:
 - `D` — Control-to-measurement matrix. May be `nothing` if unused.
 - `R` — Observation noise covariance matrix.
 
-## Diagnostics
+#### Diagnostics
 These fields store intermediate quantities from the *most recent measurement update* 
 (useful for debugging or adaptive filtering):
 
@@ -39,7 +39,7 @@ These fields store intermediate quantities from the *most recent measurement upd
 - `K` — Kalman gain.
 
 """
-struct KalmanFilter{T} <: AbstractSequentialFilter{T}
+struct KalmanFilter{T} <: AbstractKalmanFilter{T}
     n::Int
     m::Int
     x::Vector{T}
@@ -61,7 +61,9 @@ function KalmanFilter{T}(nx::Int, m::Int, x0, P0, F0, B0, Q0, H0, D0, R0) where 
     y0 = zeros(T, m)
     S0 = Matrix{T}(I, m, m)
     K0 = zeros(T, nx, m)
-    return KalmanFilter(nx, m, x0, P0, F0, B0, Q0, H0, D0, R0, z0, y0, S0, K0)
+    return KalmanFilter(
+        nx, m, copy(x0), copy(P0), F0, B0, Q0, H0, D0, R0, z0, y0, S0, K0
+    )
 end
 
 # ==========================================================================================================
