@@ -2,6 +2,7 @@ module Filters
 
 using LinearAlgebra
 using StaticArrays
+using FunctionWrappers: FunctionWrapper
 
 include("utils/linalg.jl")
 
@@ -12,7 +13,7 @@ export AbstractFilter, AbstractSequentialFilter, AbstractBatchFilter, AbstractSm
 include("interface.jl")
 include("cache.jl")
 
-# ==========================================================================================================
+# ==========================================================================================
 # Kalman filters
 
 include("kalman/interface.jl")
@@ -25,5 +26,8 @@ include("kalman/kf.jl")
 
 export SquareRootKalmanFilter
 include("kalman/srkf.jl")
+
+export ExtendedKalmanFilter
+include("kalman/ekf.jl")
 
 end
