@@ -1,44 +1,33 @@
 module Filters
 
 using LinearAlgebra
-using StaticArrays
-using FunctionWrappers: FunctionWrapper
 
-include("utils/linalg.jl")
+# ------------------------------------------------------------------------------------------
+# Interface
+# ------------------------------------------------------------------------------------------
 
-export AbstractFilter, AbstractSequentialFilter, AbstractBatchFilter, AbstractSmoother,
-    predict!, update!, estimate, predict, update,
-    covariance, loglikelihood,
-    AbstractFilterCache, empty!, resize!
-include("interface.jl")
-include("cache.jl")
+export AbstractStateEstimate, estimate, covariance
+include("state.jl")
 
-# ==========================================================================================
-# Kalman filters
+export AbstractFilter
+export AbstractSequentialFilter, predict!, update!, step!
+export AbstractFilterPrediction, AbstractFilterUpdate
+include("filter.jl")
 
-include("kalman/interface.jl")
+export AbstractModel
+export AbstractStateModel, AbstractObservationModel, transition!, observation!, jacobian
+export AbstractNoiseModel, AbstractTimeConstantNoiseModel, AbstractTimeDependantNoiseModel
+include("model.jl")
 
-export KalmanFilterCache, KalmanFilterSCache
-include("kalman/cache.jl")
+# ------------------------------------------------------------------------------------------
+# Kalman filters 
+# ------------------------------------------------------------------------------------------
 
-export KalmanFilter
+export KalmanState
+export LinearStateModel, LinearObservationModel, ConstantGaussianNoise
+include("kalman/models.jl")
+
+export KalmanFilterPrediction, KalmanFilterUpdate, KalmanFilter
 include("kalman/kf.jl")
-
-export SquareRootKalmanFilter
-include("kalman/srkf.jl")
-
-export ExtendedKalmanFilter
-include("kalman/ekf.jl")
-
-# ==========================================================================================
-# Particle filters 
-
-export ParticleFilter, resample!, Resampling
-include("particle/interface.jl")
-include("particle/filter.jl")
-
-export NoResamplingAlgorithm, SystematicResamplingAlgorithm, MultinomialResamplingAlgorithm
-export EffectiveSamplePolicy
-include("particle/resampling.jl")
 
 end
