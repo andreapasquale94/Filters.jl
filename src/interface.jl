@@ -34,25 +34,25 @@ Return the type of the filter's state.
 @inline ftype(::AbstractFilter{T}) where T = T
 
 """
-    nx(filter::AbstractFilter)::Int
+    nstates(filter::AbstractFilter)::Int
 
 Return the state dimension of the filter.
 """
-@inline nx(filter::AbstractFilter) = throw(MethodError(nx, (filter,)))
+@inline nstates(filter::AbstractFilter) = throw(MethodError(nstates, (filter,)))
 
 """
-    nz(filter::AbstractFilter)::Int
+    nobs(filter::AbstractFilter)::Int
 
 Return the observation dimension of the filter.
 """
-@inline nz(filter::AbstractFilter) = throw(MethodError(nz, (filter,)))
+@inline nobs(filter::AbstractFilter) = throw(MethodError(nobs, (filter,)))
 
 """
-    nu(filter::AbstractFilter)::Int
+    ncontrol(filter::AbstractFilter)::Int
 
 Return the control input dimension of the filter. 
 """
-@inline nu(filter::AbstractFilter) = throw(MethodError(nu, (filter,)))
+@inline ncontrol(filter::AbstractFilter) = throw(MethodError(ncontrol, (filter,)))
 
 """
     islinear(filter::AbstractFilter)::Bool 

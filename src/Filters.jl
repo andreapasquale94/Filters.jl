@@ -30,4 +30,15 @@ include("kalman/srkf.jl")
 export ExtendedKalmanFilter
 include("kalman/ekf.jl")
 
+# ==========================================================================================
+# Particle filters 
+
+export ParticleFilter, resample!, Resampling
+include("particle/interface.jl")
+include("particle/filter.jl")
+
+export NoResamplingAlgorithm, SystematicResamplingAlgorithm, MultinomialResamplingAlgorithm
+export EffectiveSamplePolicy
+include("particle/resampling.jl")
+
 end

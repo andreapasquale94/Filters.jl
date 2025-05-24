@@ -77,9 +77,9 @@ end
 
 # ==========================================================================================================
 
-@inline nx(filter::SquareRootKalmanFilter) = filter.n
-@inline nz(filter::SquareRootKalmanFilter) = filter.m
-@inline nu(filter::SquareRootKalmanFilter) = filter.B === nothing ? 0 : size(filter.B, 2)
+@inline nstates(filter::SquareRootKalmanFilter) = filter.n
+@inline nobs(filter::SquareRootKalmanFilter) = filter.m
+@inline ncontrol(filter::SquareRootKalmanFilter) = filter.B === nothing ? 0 : size(filter.B, 2)
 @inline islinear(filter::SquareRootKalmanFilter) = true
 
 function Base.show(io::IO, kf::SquareRootKalmanFilter{T}) where T

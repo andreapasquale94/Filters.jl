@@ -68,9 +68,9 @@ end
 
 # ==========================================================================================================
 
-@inline nx(filter::KalmanFilter) = filter.n
-@inline nz(filter::KalmanFilter) = filter.m
-@inline nu(filter::KalmanFilter) = filter.B === nothing ? 0 : size(filter.B, 2)
+@inline nstates(filter::KalmanFilter) = filter.n
+@inline nobs(filter::KalmanFilter) = filter.m
+@inline ncontrol(filter::KalmanFilter) = filter.B === nothing ? 0 : size(filter.B, 2)
 @inline islinear(filter::KalmanFilter) = true
 
 function Base.show(io::IO, kf::KalmanFilter{T}) where T
