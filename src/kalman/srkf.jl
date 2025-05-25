@@ -23,7 +23,7 @@ function predict!(
     kwargs...
 ) where {T}
     # State estimate time update    
-    transition!(est.x, kfp.state, est.x; u = u, kwargs...)
+    transition!(kfp.state, est.x, est.x; u = u, kwargs...)
 
     # Predict covariance via QR of [F * √P  √Q]
     n = kfp.n
@@ -82,7 +82,7 @@ function update!(
     kwargs...
 ) where {T}
     # Measurement prediction
-    observation!(kfu.z, kfu.obs, est.x; u = u, kwargs...)
+    observation!(kfu.obs, kfu.z, est.x; u = u, kwargs...)
 
     n = kfu.n
     m = kfu.m

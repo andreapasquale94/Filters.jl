@@ -23,11 +23,11 @@ struct LinearStateModel{T <: Number} <: AbstractStateModel
     B::Matrix{T}
 end
 
-function transition!(out, m::LinearStateModel, x; u = missing, kwargs...)
+function transition!(m::LinearStateModel, xn, x; u = missing, kwargs...)
     @inbounds begin
-        out .= m.F * x
+        xn .= m.F * x
         if !ismissing(u)
-            out .+= m.B * u
+            xn .+= m.B * u
         end
     end
     nothing
@@ -44,11 +44,11 @@ struct LinearObservationModel{T <: Number} <: AbstractObservationModel
     D::Matrix{T}
 end
 
-function observation!(out, m::LinearObservationModel, x; u = missing, kwargs...)
+function observation!(m::LinearObservationModel, z, x; u = missing, kwargs...)
     @inbounds begin
-        out .= m.H * x
+        z .= m.H * x
         if !ismissing(u)
-            out .+= m.D * u
+            z .+= m.D * u
         end
     end
     nothing

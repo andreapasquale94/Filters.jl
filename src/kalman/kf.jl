@@ -60,7 +60,7 @@ function predict!(
     kwargs...
 ) where {T}
     # State estimate time update
-    transition!(est.x, kfp.state, est.x; u = u, kwargs...)
+    transition!(kfp.state, est.x, est.x; u = u, kwargs...)
     # Prediction error covariance time update
     Q = covariance(kfp.noise)
     F = jacobian(kfp.state)
@@ -104,7 +104,7 @@ function update!(
     kwargs...
 ) where {T}
     # Measurement prediction
-    observation!(kfu.z, kfu.obs, est.x; u = u, kwargs...)
+    observation!(kfu.obs, kfu.z, est.x; u = u, kwargs...)
 
     @inbounds begin
         # Compute the innovation
