@@ -1,6 +1,6 @@
 abstract type AbstractFilter end
 
-# ------------------------------------------------------------------------------------------
+# ——————————————————————————————————————————————————————————————————————————————————————————
 # Sequential filter API
 # ------------------------------------------------------------------------------------------
 
@@ -43,7 +43,7 @@ function estimate(node::AbstractSequentialFilter)
 end
 
 # ------------------------------------------------------------------------------------------
-# Prediction API
+# Sequential filter prediction API
 # ------------------------------------------------------------------------------------------
 
 abstract type AbstractFilterPrediction <: AbstractSequentialFilter end
@@ -58,7 +58,7 @@ function predict!(est::AbstractStateEstimate, p::AbstractFilterPrediction; kwarg
 end
 
 # ------------------------------------------------------------------------------------------
-# Update API
+# Sequential filter update API
 # ------------------------------------------------------------------------------------------
 
 abstract type AbstractFilterUpdate <: AbstractSequentialFilter end
