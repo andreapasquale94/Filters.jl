@@ -22,3 +22,12 @@ Returns the current state covariance matrix.
 function covariance(est::AbstractStateEstimate)
     throw(MethodError(covariance, (est,)))
 end
+
+"""
+    confidence(est::AbstractStateEstimate)
+
+Returns the current state confidence (3σ).
+"""
+function confidence(est::AbstractStateEstimate)
+    return 3sqrt.(diag(covariance(est)))
+end

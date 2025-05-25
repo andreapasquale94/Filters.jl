@@ -18,7 +18,7 @@ P0 = T[0.1 0.0; 0.0 1e-3];
 work = harmonic_oscillator(T, x̄0; ω0 = 1, γ = 0.1, σₚ = 1e-2, σₘ = 1e-3, ΔT = 0.1, Tf = 50);
 
 # Create filter 
-kf = KalmanFilter(
+kf = KalmanFilter{T}(
     KalmanState(x̄0, P0),
     KalmanFilterPrediction{T}(work.model.state, work.model.process_noise),
     KalmanFilterUpdate{T}(work.model.obs, work.model.obs_noise, work.nx, work.nz)
@@ -38,7 +38,7 @@ t = collect(work.dt);
 x̂ = hcat([estimate(e) for e in est]...);
 xt = work.x_true;
 x = work.x_sim;
-cb = hcat([3sqrt.(diag(covariance(e))) for e in est]...);
+cb = hcat([confidence(e) for e in est]...);
 
 # Position plot
 p1 = plot(t, xt[1, :], label = "\$x_{g}(t)\$");

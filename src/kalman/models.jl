@@ -8,6 +8,14 @@ end
 @inline estimate(s::KalmanState) = s.x
 @inline covariance(s::KalmanState) = s.P
 
+struct SquareRootKalmanState{T <: Number} <: AbstractStateEstimate
+    x::Vector{T}
+    L::LowerTriangular{T}
+end
+
+@inline estimate(s::SquareRootKalmanState) = s.x
+@inline covariance(s::SquareRootKalmanState) = s.L * s.L'
+
 # ----
 
 struct LinearStateModel{T <: Number} <: AbstractStateModel
@@ -57,3 +65,13 @@ struct ConstantGaussianNoise{T <: Number} <: AbstractTimeConstantNoiseModel
 end
 
 @inline covariance(noise::ConstantGaussianNoise) = noise.M
+
+@inline LinearAlgebra.cholesky(noise::ConstantGaussianNoise) = cholesky(noise.M).L
+
+struct ConstantLGaussianNoise{T <: Number} <: AbstractTimeConstantNoiseModel
+    L::LowerTriangular{T}
+end
+
+@inline covariance(noise::ConstantLGaussianNoise) = noise.L * noise.L'
+
+@inline LinearAlgebra.cholesky(noise::ConstantLGaussianNoise) = noise.L

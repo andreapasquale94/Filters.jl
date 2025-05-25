@@ -15,32 +15,26 @@ x̄0 = T[1.0, 0.0];
 P0 = T[0.1 0.0; 0.0 1e-3];
 
 # Create workspace
-work = harmonic_oscillator(
-    T,
-    x̄0;
-    ω0 = 1,
-    γ = 0.1,
-    σₚ = 1e-2,
-    σₘ = 1e-3,
-    ΔT = 0.1,
-    Tf = 50,
-    ω = 0.5
-);
+work = harmonic_oscillator(T, x̄0; ω0 = 1, γ = 0.1, σₚ = 1e-2, σₘ = 1e-3, ΔT = 0.1, Tf = 50);
 
 # Create filter 
-kf = KalmanFilter{T}(
-    KalmanState(x̄0, P0),
-    KalmanFilterPrediction{T}(work.model.state, work.model.process_noise),
-    KalmanFilterUpdate{T}(work.model.obs, work.model.obs_noise, work.nx, work.nz)
+srkf = SquareRootKalmanFilter{T}(
+    SquareRootKalmanState(x̄0, cholesky(P0).L),
+    SquareRootKalmanFilterPrediction{T}(
+        work.model.state,
+        work.model.process_noise,
+        work.nx
+    ),
+    SquareRootKalmanFilterUpdate{T}(work.model.obs, work.model.obs_noise, work.nx, work.nz)
 );
 
-est = Vector{KalmanState{T}}(undef, work.nt);
-est[1] = deepcopy(kf.est);
+est = Vector{SquareRootKalmanState{T}}(undef, work.nt);
+est[1] = deepcopy(srkf.est);
 
 # Run filter
 for i in 2:work.nt
-    step!(kf, work.z_sim[:, i]; uk = work.u_sim[i-1])
-    est[i] = deepcopy(kf.est)
+    step!(srkf, work.z_sim[:, i])
+    est[i] = deepcopy(srkf.est)
 end
 
 # Collect and print results

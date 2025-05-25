@@ -1,13 +1,55 @@
 
+struct _KalmanFilter{
+    T <: Number,
+    S <: AbstractStateEstimate,
+    P <: AbstractFilterPrediction,
+    U <: AbstractFilterUpdate
+} <: AbstractSequentialFilter
+    est::S
+    pre::P
+    up::U
+end
+
+function predict!(kf::_KalmanFilter{T}; u = missing, kwargs...) where {T}
+    predict!(kf.est, kf.pre; u = u, kwargs...)
+end
+
+function update!(
+    kf::_KalmanFilter{T},
+    z::AbstractVector{T};
+    u = missing,
+    kwargs...
+) where {T}
+    update!(kf.est, kf.up, z; u = u, kwargs...)
+end
+
+function step!(
+    kf::_KalmanFilter{T},
+    z::AbstractVector{T};
+    uk = missing,
+    uk1 = missing,
+    kwargs...
+) where {T}
+    predict!(kf; u = uk, kwargs...)
+    update!(kf, z; u = uk1, kwargs...)
+    nothing
+end
+
+@inline estimate(kf::_KalmanFilter) = kf.est
+
+# ------------------------------------------------------------------------------------------
+# Time-constant Kalman filters 
+# ------------------------------------------------------------------------------------------
+
 struct KalmanFilterPrediction{
     T <: Number,
     S <: AbstractStateModel,
-    N <: AbstractNoiseModel
+    N <: AbstractTimeConstantNoiseModel
 } <: AbstractFilterPrediction
     state::S
     noise::N
     function KalmanFilterPrediction{T}(state::S, noise::N) where {T, S, N}
-        new{T, S, N}(state, noise)
+        return new{T, S, N}(state, noise)
     end
 end
 
@@ -29,7 +71,7 @@ end
 struct KalmanFilterUpdate{
     T <: Number,
     O <: AbstractObservationModel,
-    N <: AbstractNoiseModel
+    N <: AbstractTimeConstantNoiseModel
 } <: AbstractFilterUpdate
     obs::O
     noise::N
@@ -43,7 +85,7 @@ struct KalmanFilterUpdate{
         n_states::Int,
         n_obs::Int
     ) where {T, O, N}
-        new{T, O, N}(
+        return new{T, O, N}(
             obs,
             noise,
             zeros(T, n_states, n_obs),
@@ -87,34 +129,9 @@ function update!(
     nothing
 end
 
-struct KalmanFilter{T} <: AbstractSequentialFilter
-    est::KalmanState{T}
-    prediction::KalmanFilterPrediction{T, <:AbstractStateModel, <:AbstractNoiseModel}
-    update::KalmanFilterUpdate{T, <:AbstractObservationModel, <:AbstractNoiseModel}
-end
-
-function predict!(kf::KalmanFilter{T}; u = missing) where {T}
-    predict!(kf.est, kf.prediction; u = u)
-end
-
-function update!(
-    kf::KalmanFilter{T},
-    z::AbstractVector{T};
-    u = missing,
-    kwargs...
-) where {T}
-    update!(kf.est, kf.update, z; u = u, kwargs...)
-end
-
-function step!(
-    kf::KalmanFilter{T},
-    z::AbstractVector{T};
-    uk = missing,
-    uk1 = missing,
-    kwargs...
-) where {T}
-    predict!(kf; u = uk)
-    update!(kf, z; u = uk1)
-end
-
-estimate(kf::KalmanFilter) = kf.est
+const KalmanFilter{T} = _KalmanFilter{
+    T,
+    KalmanState{T},
+    KalmanFilterPrediction{T, <:AbstractStateModel, <:AbstractTimeConstantNoiseModel},
+    KalmanFilterUpdate{T, <:AbstractObservationModel, <:AbstractTimeConstantNoiseModel}
+}

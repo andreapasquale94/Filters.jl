@@ -47,14 +47,23 @@ end
 # Noise 
 
 abstract type AbstractNoiseModel <: AbstractModel end
+
 abstract type AbstractTimeConstantNoiseModel <: AbstractNoiseModel end
 
 function covariance(m::AbstractTimeConstantNoiseModel)
     throw(MethodError(covariance, (m)))
 end
 
+function LinearAlgebra.cholesky(m::AbstractTimeConstantNoiseModel)
+    throw(MethodError(cholesky, (m)))
+end
+
 abstract type AbstractTimeDependantNoiseModel <: AbstractNoiseModel end
 
 function covariance(m::AbstractTimeDependantNoiseModel, t)
     throw(MethodError(covariance, (m, t)))
+end
+
+function LinearAlgebra.cholesky(m::AbstractTimeDependantNoiseModel, t)
+    throw(MethodError(cholesky, (m, t)))
 end
