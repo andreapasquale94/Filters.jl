@@ -1,21 +1,23 @@
 
-struct _KalmanFilter{
+abstract type AbstractKalmanFilter{T} <: AbstractSequentialFilter end
+
+struct BaseKalmanFilter{
     T <: Number,
     S <: AbstractStateEstimate,
     P <: AbstractFilterPrediction,
     U <: AbstractFilterUpdate
-} <: AbstractSequentialFilter
+} <: AbstractKalmanFilter{T}
     est::S
     pre::P
     up::U
 end
 
-function predict!(kf::_KalmanFilter{T}; u = missing, kwargs...) where {T}
+function predict!(kf::BaseKalmanFilter{T}; u = missing, kwargs...) where {T}
     predict!(kf.est, kf.pre; u = u, kwargs...)
 end
 
 function update!(
-    kf::_KalmanFilter{T},
+    kf::BaseKalmanFilter{T},
     z::AbstractVector{T};
     u = missing,
     kwargs...
@@ -24,7 +26,7 @@ function update!(
 end
 
 function step!(
-    kf::_KalmanFilter{T},
+    kf::BaseKalmanFilter{T},
     z::AbstractVector{T};
     uk = missing,
     uk1 = missing,
@@ -35,7 +37,7 @@ function step!(
     nothing
 end
 
-@inline estimate(kf::_KalmanFilter) = kf.est
+@inline estimate(kf::BaseKalmanFilter) = kf.est
 
 # ------------------------------------------------------------------------------------------
 # Time-constant Kalman filters 
@@ -129,7 +131,7 @@ function update!(
     nothing
 end
 
-const KalmanFilter{T} = _KalmanFilter{
+const KalmanFilter{T} = BaseKalmanFilter{
     T,
     KalmanState{T},
     KalmanFilterPrediction{T, <:AbstractStateModel, <:AbstractTimeConstantNoiseModel},

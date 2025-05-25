@@ -111,7 +111,7 @@ function update!(
     nothing
 end
 
-const SquareRootKalmanFilter{T} = _KalmanFilter{
+const SquareRootKalmanFilter{T} = BaseKalmanFilter{
     T,
     SquareRootKalmanState{T},
     SquareRootKalmanFilterPrediction{
