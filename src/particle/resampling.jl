@@ -58,12 +58,14 @@ end
     resample!(state, logic::Resampling; kwargs...)
 
 Resampling logic implementation, triggered by a given policy and executed accoring to the
-given algorithm.
+given algorithm. Returns a boolean depending associated to the resampling triggering.
 """
 function resample!(state::ParticleState, r::Resampling; kwargs...)
     if trigger(state, r.policy; kwargs...)
         resample!(state, r.algorithm; kwargs...)
+        return true
     end
+    return false
 end
 
 # ——— Algorithms  ——————————————————————————————————————————————————————————————————————————
