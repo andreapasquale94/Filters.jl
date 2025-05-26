@@ -1,3 +1,8 @@
+"""
+    AbstractFilter 
+
+Abstract base type for all filters.
+"""
 abstract type AbstractFilter end
 
 # ——————————————————————————————————————————————————————————————————————————————————————————

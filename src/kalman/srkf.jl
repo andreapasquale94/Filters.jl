@@ -1,3 +1,7 @@
+# ——————————————————————————————————————————————————————————————————————————————————————————
+# Time-constant square-root Kalman filters 
+# ------------------------------------------------------------------------------------------
+
 struct SquareRootKalmanFilterPrediction{
     T <: Number,
     S <: AbstractStateModel,

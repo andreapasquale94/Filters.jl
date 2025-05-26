@@ -1,4 +1,6 @@
-# State 
+# ——————————————————————————————————————————————————————————————————————————————————————————
+# State estimate models
+# ------------------------------------------------------------------------------------------
 
 struct KalmanState{T <: Number} <: AbstractStateEstimate
     x::Vector{T}
@@ -16,7 +18,9 @@ end
 @inline estimate(s::SquareRootKalmanState) = s.x
 @inline covariance(s::SquareRootKalmanState) = s.L * s.L'
 
-# ----
+# ——————————————————————————————————————————————————————————————————————————————————————————
+# State transition models
+# ------------------------------------------------------------------------------------------
 
 struct LinearStateModel{T <: Number} <: AbstractStateModel
     F::Matrix{T}
@@ -37,7 +41,9 @@ function jacobian(m::LinearStateModel)
     return m.F
 end
 
-# Observation
+# ——————————————————————————————————————————————————————————————————————————————————————————
+# Observiation models
+# ------------------------------------------------------------------------------------------
 
 struct LinearObservationModel{T <: Number} <: AbstractObservationModel
     H::Matrix{T}
@@ -58,7 +64,9 @@ function jacobian(m::LinearObservationModel)
     return m.H
 end
 
-# Noise
+# ——————————————————————————————————————————————————————————————————————————————————————————
+# Noise models
+# ------------------------------------------------------------------------------------------
 
 struct ConstantGaussianNoise{T <: Number} <: AbstractTimeConstantNoiseModel
     M::Matrix{T}
