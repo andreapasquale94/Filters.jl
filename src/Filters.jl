@@ -46,6 +46,7 @@ include("kalman/srkf.jl")
 abstract type AbstractParticleFilter{T} <: AbstractSequentialFilter end
 
 export ParticleState, normalize!, length, effective_samples
+export AbstractLikelihoodModel, likelihood
 include("particle/models.jl")
 
 export Resampling, resample!, trigger

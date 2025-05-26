@@ -54,8 +54,16 @@ Number of particles in the given state.
 @inline Base.length(s::ParticleState) = length(s.w)
 
 """
-    effective_samples(s::ParticleState)
+    neffective(s::ParticleState)
 
 Computes the effective samples size.
 """
-@inline effective_samples(s::ParticleState) = 1 / sum(s.w .^ 2)
+@inline neffective(s::ParticleState) = 1 / sum(s.w .^ 2)
+
+# Likelihood model interface
+
+abstract type AbstractLikelihoodModel <: AbstractModel end
+
+function likelihood(m::AbstractLikelihoodModel, x, z; kwargs...)
+    throw(MethodError(likelihood, (m, x, z)))
+end

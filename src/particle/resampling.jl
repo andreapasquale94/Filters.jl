@@ -52,6 +52,9 @@ struct Resampling{R <: AbstractResamplingAlgorithm, P <: AbstractResamplingPolic
        AbstractParticleResampling
     algorithm::R
     policy::P
+    function Resampling(algorithm::R, policy::P) where {R, P}
+        return new{R, P}(algorithm, policy)
+    end
 end
 
 """
@@ -122,17 +125,13 @@ struct SystematicResamplingAlgorithm <: AbstractResamplingAlgorithm end
 
 Performs systematic resampling on the particles `state`.
 """
-function resample!(
-    state::ParticleState{T},
-    ::SystematicResamplingAlgorithm;
-    kwargs...
-) where {T}
+function resample!(state::ParticleState, ::SystematicResamplingAlgorithm; kwargs...)
     N = length(state)
     pos = range(rand() / N, step = 1 / N, length = N)
     cum = cumsum!(state.w, state.w)
 
     i = 1
-    for j in 1:N
+    @inbounds for j in 1:N
         while pos[j] > cum[i]
             i += 1
         end
@@ -187,7 +186,7 @@ function resample!(
     N = length(state)
     cum = cumsum!(state.w, state.w)
 
-    for j in 1:N
+    @inbounds for j in 1:N
         u = rand()
         i = searchsortedfirst(cum, u)
         rs.cache[j, :] .= state.p[i, :]
@@ -210,5 +209,5 @@ struct EffectiveSamplesPolicy <: AbstractResamplingPolicy
 end
 
 function trigger(state::ParticleState, policy::EffectiveSamplesPolicy)
-    return effective_samples(state) < policy.N
+    return neffective(state) < policy.N
 end
