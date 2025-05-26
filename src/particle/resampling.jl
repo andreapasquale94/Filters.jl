@@ -147,13 +147,14 @@ end
 
 Type representing *multinomial resampling* with a preallocated buffer.
 
-This resampling strategy samples particles independently according to their normalized weights
-using inverse transform sampling.
+This resampling strategy samples particles independently according to their normalized
+weights using inverse transform sampling.
 
 ## Math
 
 Let the normalized weight of a particle \$i\$ be \$w_i\$.
-For each particle \$j\$, sample \$u_j \\in \\mathcal{U}(0, 1)\$, then find the index \$i\$ such that:
+For each particle \$j\$, sample \$u_j \\in \\mathcal{U}(0, 1)\$, then find the index \$i\$
+such that:
 
 \$\$c_{i-1} = \\sum_{k=1}^{i-1} w_k < u_j \\leq \\sum_{k=1}^{i} w_k = c_i\$\$
 
@@ -169,7 +170,7 @@ The resampling process is done as follows:
 Assign the particle \$j\$ to particle \$i\$.
 When the particles resampling is finished, reset the weights to uniform (\$1/N\$).
 """
-struct MultinomialResamplingAlgorithm{T} <: AbstractResamplingAlgorithm{T}
+struct MultinomialResamplingAlgorithm{T} <: AbstractResamplingAlgorithm
     cache::Matrix{T}
 end
 

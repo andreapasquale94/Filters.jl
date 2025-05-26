@@ -1,6 +1,4 @@
 
-abstract type AbstractKalmanFilter{T} <: AbstractSequentialFilter end
-
 struct BaseKalmanFilter{
     T <: Number,
     S <: AbstractStateEstimate,

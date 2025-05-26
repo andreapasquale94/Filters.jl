@@ -2,7 +2,7 @@ module Filters
 
 using LinearAlgebra
 
-# ------------------------------------------------------------------------------------------
+# ——————————————————————————————————————————————————————————————————————————————————————————
 # Interface
 # ------------------------------------------------------------------------------------------
 
@@ -20,9 +20,11 @@ export AbstractNoiseModel, AbstractTimeConstantNoiseModel, AbstractTimeDependant
 export cholesky
 include("model.jl")
 
+# ——————————————————————————————————————————————————————————————————————————————————————————
+# Kalman filters API
 # ------------------------------------------------------------------------------------------
-# Kalman filters 
-# ------------------------------------------------------------------------------------------
+
+abstract type AbstractKalmanFilter{T} <: AbstractSequentialFilter end
 
 include("kalman/utils.jl")
 
@@ -36,4 +38,23 @@ include("kalman/kf.jl")
 export SquareRootKalmanFilter,
     SquareRootKalmanFilterPrediction, SquareRootKalmanFilterUpdate
 include("kalman/srkf.jl")
+
+# ——————————————————————————————————————————————————————————————————————————————————————————
+# Particle filters API
+# ------------------------------------------------------------------------------------------
+
+abstract type AbstractParticleFilter{T} <: AbstractSequentialFilter end
+
+export ParticleState, normalize!, length, effective_samples
+include("particle/models.jl")
+
+export Resampling, resample!, trigger
+export EffectiveSamplesPolicy
+export NoResamplingAlgorithm, SystematicResamplingAlgorithm, MultinomialResamplingAlgorithm
+include("particle/resampling.jl")
+
+export BootstrapParticleFilter,
+    BootstrapParticleFilterPrediction, BootstrapParticleFilterUpdate
+include("particle/bootstrap.jl")
+
 end

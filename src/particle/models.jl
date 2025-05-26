@@ -30,7 +30,12 @@ function covariance(est::ParticleState)
     return X * Diagonal(est.w) * X'
 end
 
-function normalize!(s::ParticleState{T <: Number}) where {T}
+"""
+    normalize!(s::ParticleState)
+
+Normalize the particles weights.
+"""
+function LinearAlgebra.normalize!(s::ParticleState{T}) where {T}
     wt = sum(s.w)
     if wt == 0
         # Avoid division by zero: reset to uniform weights
@@ -41,6 +46,16 @@ function normalize!(s::ParticleState{T <: Number}) where {T}
     nothing
 end
 
+"""
+    length(s::ParticleState)
+
+Number of particles in the given state.
+"""
 @inline Base.length(s::ParticleState) = length(s.w)
 
+"""
+    effective_samples(s::ParticleState)
+
+Computes the effective samples size.
+"""
 @inline effective_samples(s::ParticleState) = 1 / sum(s.w .^ 2)

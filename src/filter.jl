@@ -46,7 +46,7 @@ end
 # Sequential filter prediction API
 # ------------------------------------------------------------------------------------------
 
-abstract type AbstractFilterPrediction <: AbstractSequentialFilter end
+abstract type AbstractFilterPrediction end
 
 """
     predict!(est::AbstractStateEstimate, p::AbstractFilterPrediction; kwargs...)
@@ -61,7 +61,7 @@ end
 # Sequential filter update API
 # ------------------------------------------------------------------------------------------
 
-abstract type AbstractFilterUpdate <: AbstractSequentialFilter end
+abstract type AbstractFilterUpdate end
 
 """
     update!(est::AbstractStateEstimate, u::AbstractFilterUpdate, obs; kwargs...)
