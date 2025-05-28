@@ -39,6 +39,9 @@ export SquareRootKalmanFilter,
     SquareRootKalmanFilterPrediction, SquareRootKalmanFilterUpdate
 include("kalman/srkf.jl")
 
+export UKFSigmaPoints, CDKFSigmaPoints, compute!
+include("kalman/sigma.jl")
+
 export SigmaPointsKalmanFilter,
     SigmaPointsKalmanFilterPrediction, SigmaPointsKalmanFilterUpdate
 include("kalman/spkf.jl")

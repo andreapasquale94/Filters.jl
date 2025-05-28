@@ -13,6 +13,6 @@ end
 
 @inline estimate(s::InformationState) = covariance(s) * s.η
 
-@inline estimate!(out, s::InformationFilter) = mul!(out, covariance(s), s.η)
+@inline estimate!(out, s::InformationState) = mul!(out, covariance(s), s.η)
 
-@inline covariance!(out, s::InformationFilter) = out .= s.Λ \ I
+@inline covariance!(out, s::InformationState) = out .= s.Λ \ I

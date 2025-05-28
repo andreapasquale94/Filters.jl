@@ -38,7 +38,7 @@ function predict!(
         # Update estimation error covariance 
         fill!(est.P, zero(T))
         for j in eachindex(est.Wc)
-            sfp.dx .= @view est.X[:, j] - est.x
+            sfp.dx .= @views(est.X[:, j]) - est.x
             est.P .+= est.Wc[j] * (sfp.dx * sfp.dx')
         end
     end
@@ -83,7 +83,7 @@ end
 
 function update!(
     est::SigmaPointKalmanState{T},
-    spu::SigmaPointsKalmanFilterUpdate{T, <:Any, <:Any, <:Any},
+    spu::SigmaPointsKalmanFilterUpdate{T, <:Any, <:Any},
     z::AbstractVector{T};
     u = missing,
     kwargs...
