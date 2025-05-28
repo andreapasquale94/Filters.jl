@@ -35,6 +35,7 @@ end
     jacobian(model::AbstractStateModel)
 
 Return the Jacobian matrix of the state-transition function with respect to the state variables.
+This function needs to be called after `transition!`.
 """
 function jacobian(m::AbstractStateModel)
     throw(MethodError(jacobian, (m)))
@@ -75,6 +76,7 @@ end
     jacobian(model::AbstractObservationModel)
 
 Return the Jacobian of the observation function with respect to the state.
+This function needs to be called after `observation!`.
 """
 function jacobian(m::AbstractObservationModel)
     throw(MethodError(jacobian, (m)))
@@ -149,7 +151,7 @@ end
 """
     autocovariance(model::AbstractTimeDependantNoiseModel, t, Δt)
 
-Return the *autocovariance* matrix of the noise process between time `t` and time `t + Δt`,
+Return the autocovariance matrix of the noise process between time `t` and time `t + Δt`,
 i.e. `E[w(t)w(t + Δt)ᵀ]`.
 
 If the noise is white this reduces to the instantaneous covariance for `Δt == 0` and `0` otherwise.

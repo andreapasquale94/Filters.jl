@@ -1,5 +1,5 @@
 # ——————————————————————————————————————————————————————————————————————————————————————————
-# Base Kalman filter implementation
+# Base Kalman filter
 # ——————————————————————————————————————————————————————————————————————————————————————————
 
 struct BaseKalmanFilter{
@@ -132,6 +132,11 @@ function update!(
     nothing
 end
 
+"""
+    KalmanFilter{T}
+
+Implements a generic Kalman filter with a prediction and an update step.
+"""
 const KalmanFilter{T} = BaseKalmanFilter{
     T,
     KalmanState{T},

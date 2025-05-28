@@ -2,6 +2,11 @@
 # State estimate models
 # ------------------------------------------------------------------------------------------
 
+"""
+    KalmanState{T}
+
+Kalman state estimate, storing the state estimate `x` and its error covariance `P`.
+"""
 struct KalmanState{T <: Number} <: AbstractStateEstimate
     x::Vector{T}
     P::Matrix{T}
@@ -10,6 +15,12 @@ end
 @inline estimate(s::KalmanState) = s.x
 @inline covariance(s::KalmanState) = s.P
 
+"""
+    SquareRootKalmanState{T}
+
+Kalman state estimate for a square-root filter, storing the state estimate `x` and the
+error covariance lower triangular Cholesky factor, `L`.
+"""
 struct SquareRootKalmanState{T <: Number} <: AbstractStateEstimate
     x::Vector{T}
     L::LowerTriangular{T}
@@ -22,6 +33,11 @@ end
 # State transition models
 # ------------------------------------------------------------------------------------------
 
+"""
+    LinearStateModel{T}
+
+Linear time-invariant state model storing the system matrix `F` and the input matrix `B`.
+"""
 struct LinearStateModel{T <: Number} <: AbstractStateModel
     F::Matrix{T}
     B::Matrix{T}
@@ -42,9 +58,15 @@ function jacobian(m::LinearStateModel)
 end
 
 # ——————————————————————————————————————————————————————————————————————————————————————————
-# Observiation models
+# Observation models
 # ------------------------------------------------------------------------------------------
 
+"""
+    LinearObservationModel{T}
+
+Linear time-invariant observation model storing the output matrix `H` and the feed-forward
+matrix `D`.
+"""
 struct LinearObservationModel{T <: Number} <: AbstractObservationModel
     H::Matrix{T}
     D::Matrix{T}
@@ -68,6 +90,11 @@ end
 # Noise models
 # ------------------------------------------------------------------------------------------
 
+"""
+    ConstantGaussianNoise{T}
+
+Constant Gaussian noise with covariance `M`.
+"""
 struct ConstantGaussianNoise{T <: Number} <: AbstractTimeConstantNoiseModel
     M::Matrix{T}
 end
@@ -75,11 +102,3 @@ end
 @inline covariance(noise::ConstantGaussianNoise) = noise.M
 
 @inline LinearAlgebra.cholesky(noise::ConstantGaussianNoise) = cholesky(noise.M).L
-
-struct ConstantLGaussianNoise{T <: Number} <: AbstractTimeConstantNoiseModel
-    L::LowerTriangular{T}
-end
-
-@inline covariance(noise::ConstantLGaussianNoise) = noise.L * noise.L'
-
-@inline LinearAlgebra.cholesky(noise::ConstantLGaussianNoise) = noise.L
