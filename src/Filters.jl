@@ -39,11 +39,15 @@ export SquareRootKalmanFilter,
     SquareRootKalmanFilterPrediction, SquareRootKalmanFilterUpdate
 include("kalman/srkf.jl")
 
-# ——————————————————————————————————————————————————————————————————————————————————————————
+# ------------------------------------------------------------------------------------------
 # Information filters API
 # ------------------------------------------------------------------------------------------
 
-abstract type AbstractInformationFilter{T} <: AbstractSequentialFilter end
+export InformationState
+include("information/models.jl")
+
+export InformationFilter, InformationFilterPrediction, InformationFilterUpdate
+include("information/if.jl")
 
 # ——————————————————————————————————————————————————————————————————————————————————————————
 # Particle filters API

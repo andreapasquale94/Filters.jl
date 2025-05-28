@@ -1,3 +1,7 @@
+# ——————————————————————————————————————————————————————————————————————————————————————————
+# Time-constant Information filter
+# ------------------------------------------------------------------------------------------
+
 struct InformationFilterPrediction{
     T <: Number,
     S <: AbstractStateModel,
@@ -7,7 +11,8 @@ struct InformationFilterPrediction{
     noise::N
     x::Vector{T}
     M::Matrix{T}
-    Finv::Matrix{T}
+    C::Matrix{T}
+    L::Matrix{T}
     function InformationFilterPrediction{T}(
         state::S,
         noise::N,
@@ -18,6 +23,7 @@ struct InformationFilterPrediction{
             noise,
             zeros(T, n_states),
             Matrix{T}(I, n_states, n_states),
+            zeros(T, n_states, n_states),
             zeros(T, n_states, n_states)
         )
     end
@@ -31,26 +37,29 @@ function predict!(
 ) where {T}
 
     # Process noise
-    Q = covariance(kfp.noise)
+    Q = covariance(ifp.noise)
+    Q_inv = Q \ I # TODO: improve, cache
 
     if iszero(est.Λ)
         # No prior information: prediction is purely from process noise
-        @. est.Λ = cholesky(Q) \ I
+        est.Λ .= Q_inv
         fill!(est.η, 0)
         return
     end
 
     @inbounds begin
         # State estimate time update (to compute the jacobian)
-        @. ifp.x = est.Λ \ est.η  # Convert information to state estimate 
+        ifp.x .= est.Λ \ est.η  # Convert information to state estimate 
         transition!(ifp.state, ifp.x, ifp.x; u = u, kwargs...)
         # Prediction error covariance time update
-        F = jacobian(kfp.state)
-        @. ifp.Finv = F / I
-        @. ifp.M = ifp.Finv' * est.Λ * ifp.Finv
+        F = jacobian(ifp.state)
+        F_inv = F \ I # TODO: improve, cache 
+        ifp.M .= F_inv' * est.Λ * F_inv
+        ifp.C .= ifp.M / (ifp.M + Q_inv)
+        ifp.L .= I - ifp.C
         # Information state time update
-        @. est.Λ = (I + ifp.M * Q) / ifp.M
-        @. est.η = est.Λ * ifp.x
+        est.Λ .= ifp.L * ifp.M .+ ifp.C * Q_inv * ifp.C'
+        est.η .= est.Λ * ifp.x
     end
     nothing
 end
@@ -64,6 +73,7 @@ struct InformationFilterUpdate{
     noise::N
     I::Matrix{T}
     i::Vector{T}
+    x::Vector{T}
     z::Vector{T}
     function InformationFilterUpdate{T}(
         obs::O,
@@ -75,6 +85,7 @@ struct InformationFilterUpdate{
             obs,
             noise,
             zeros(T, n_states, n_states),
+            zeros(T, n_states),
             zeros(T, n_states),
             zeros(T, n_obs)
         )
@@ -89,34 +100,32 @@ function update!(
     kwargs...
 ) where {T}
     # Measurement prediction
-    observation!(ifu.obs, ifu.z, est.x; u = u, kwargs...)
+    ifu.x .= est.Λ \ est.η  # Convert information to state estimate 
+    observation!(ifu.obs, ifu.z, ifu.x; u = u, kwargs...)
 
     @inbounds begin
         # Compute the innovation covariance
         R = covariance(ifu.noise)
         H = jacobian(ifu.obs)
 
-        HRT_inv = H' * (R \ I) # TODO: cache
-        @. ifu.i = HRT_inv * z
-        @. ifu.I = HRT_inv * H
+        HRT_inv = H' * (R \ I) # TODO: improve, cache
+        ifu.i .= HRT_inv * z
+        ifu.I .= HRT_inv * H
 
         # Compute the information update
-        @. est.η = est.η + ifu.i
-        @. est.Λ = est.Λ + ifu.I
+        est.η .= est.η .+ ifu.i
+        est.Λ .= est.Λ .+ ifu.I
     end
     nothing
 end
 
-struct InformationFilter{T <: Number} <: AbstractInformationFilter{T}
-    est::InformationState{T}
-    pre::InformationFilterPrediction{
-        T,
-        <:AbstractStateModel,
-        <:AbstractTimeConstantNoiseModel
-    }
-    up::InformationFilterUpdate{
+const InformationFilter{T} = BaseKalmanFilter{
+    T,
+    InformationState{T},
+    InformationFilterPrediction{T, <:AbstractStateModel, <:AbstractTimeConstantNoiseModel},
+    InformationFilterUpdate{
         T,
         <:AbstractObservationModel,
         <:AbstractTimeConstantNoiseModel
     }
-end
+}
