@@ -5,6 +5,7 @@ using Plots
 using Random
 Plots.gr()
 
+# ----
 # Models
 
 struct SimpleStateTransition{T} <: AbstractStateModel
@@ -25,6 +26,9 @@ function Filters.likelihood(m::SimpleLikelyhoodModel, x, z)
     z_pred = atan((r * sin(x[1]) + y0), (r * cos(x[1]) + x0))
     return pdf(Normal(z_pred, m.P), z)[1]
 end
+
+# ---- 
+# Setup
 
 Random.seed!(1)
 
@@ -49,7 +53,9 @@ for k in 1:nIter
 end;
 x = x[1:nIter];
 
-# Particle filter 
+# ----
+# Filter 
+
 Np = 1000;
 p0 = rand(Normal(μx0, Σx0), Np, 1);
 w0 = fill(1.0 / Np, Np);

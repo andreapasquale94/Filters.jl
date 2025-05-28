@@ -34,34 +34,9 @@ kf = KalmanFilter{T}(
     KalmanFilterUpdate{T}(work.model.obs, work.model.obs_noise, work.nx, work.nz)
 );
 
-est = Vector{KalmanState{T}}(undef, work.nt);
-est[1] = deepcopy(kf.est);
-
-# Run filter
-for i in 2:work.nt
-    step!(kf, work.z_sim[:, i]; uk = work.u_sim[i-1])
-    est[i] = deepcopy(kf.est)
-end
+# Run the filter
+estimates = run(KalmanState{T}, kf, work.z_sim; u = work.u_sim);
 
 # Collect and print results
-t = collect(work.dt);
-x̂ = hcat([estimate(e) for e in est]...);
-xt = work.x_true;
-x = work.x_sim;
-cb = hcat([confidence(e) for e in est]...);
-
-# Position plot
-p1 = plot(t, xt[1, :], label = "\$x_{g}(t)\$");
-plot!(p1, t, x[1, :], label = "\$x(t)\$", xlabel = "\$t\$", ylabel = "\$x(t)\$");
-plot!(p1, t, x̂[1, :], label = "\$\\hat{x}(t)\$", ribbon = cb[1, :], fillalpha = 0.15);
-plot!(p1, t, x̂[1, :] + cb[1, :], label = nothing, linestyle = :dash, color = :gray);
-plot!(p1, t, x̂[1, :] - cb[1, :], label = nothing, linestyle = :dash, color = :gray);
-
-# Velocity plot
-p2 = plot(t, xt[2, :], label = "\$x_{g}(t)\$");
-plot!(p2, t, x[2, :], label = "\$x(t)\$", xlabel = "\$t\$", ylabel = "\$v(t)\$");
-plot!(p2, t, x̂[2, :], label = "\$\\hat{x}(t)\$", ribbon = cb[2, :], fillalpha = 0.15);
-plot!(p2, t, x̂[2, :] + cb[2, :], label = nothing, linestyle = :dash, color = :gray);
-plot!(p2, t, x̂[2, :] - cb[2, :], label = nothing, linestyle = :dash, color = :gray);
-
-plot(p1, p2, layout = (2, 1), dpi = 1600, size = (800, 600), framestyle = :box)
+p = plot_estimates(estimates, collect(work.dt), work.x_true, work.x_sim);
+p
