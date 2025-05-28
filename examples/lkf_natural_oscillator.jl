@@ -8,7 +8,7 @@ Random.seed!(1)
 T = Float64;
 
 # Include models
-include("models.jl");
+include("_models.jl");
 
 # Initial conditions (mean and covariance)
 x̄0 = T[1.0, 0.0];

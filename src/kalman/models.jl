@@ -13,7 +13,14 @@ struct KalmanState{T <: Number} <: AbstractStateEstimate
 end
 
 @inline estimate(s::KalmanState) = s.x
+
+@inline estimate!(out, s::KalmanState) = out .= s.x
+
 @inline covariance(s::KalmanState) = s.P
+
+@inline covariance!(out, s::KalmanState) = out .= s.P
+
+# ------------------------------------------------------------------------------------------
 
 """
     SquareRootKalmanState{T}
@@ -27,7 +34,43 @@ struct SquareRootKalmanState{T <: Number} <: AbstractStateEstimate
 end
 
 @inline estimate(s::SquareRootKalmanState) = s.x
+
+@inline estimate!(out, s::SquareRootKalmanState) = out .= s.x
+
 @inline covariance(s::SquareRootKalmanState) = s.L * s.L'
+
+@inline covariance!(out, s::SquareRootKalmanState) = mul!(out, s.L, s.L')
+
+# ------------------------------------------------------------------------------------------
+
+"""
+    SigmaPointKalmanState{T}
+
+Kalman state estimate for a sigma-point filter, storing the sigma points `X`, the weights
+for the mean `Wm` and the ones for the covariance `Wc` as well as the latest state and
+covariance.
+"""
+struct SigmaPointKalmanState{T <: Number} <: AbstractStateEstimate
+    X::Matrix{T}
+    Wm::Vector{T}
+    Wc::Vector{T}
+    x::Vector{T}
+    P::Matrix{T}
+end
+
+function SigmaPointKalmanState(x0::AbstractVector{T}, P0::AbstractMatrix{T}) where {T}
+    n_states = length(x0)
+    return SigmaPointKalmanState(
+        zeros(T, n_states, 2n_states + 1),
+        zeros(T, 2n_states + 1),
+        zeros(T, 2n_states + 1),
+        x0,
+        P0
+    )
+end
+
+@inline estimate(s::SigmaPointKalmanState{T}) where {T} = s.x
+@inline covariance(s::SigmaPointKalmanState{T}) where {T} = s.P
 
 # ——————————————————————————————————————————————————————————————————————————————————————————
 # State transition models

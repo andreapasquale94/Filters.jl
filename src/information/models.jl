@@ -1,16 +1,18 @@
 
+"""
+    InformationState{T}
+
+State estimate represented using information vector an matrix.
+"""
 struct InformationState{T <: Number} <: AbstractStateEstimate
     η::Vector{T}  # information vector   (Λ * μ)
     Λ::Matrix{T}  # information matrix   (Σ⁻¹)
 end
 
 @inline covariance(s::InformationState) = s.Λ \ I
+
 @inline estimate(s::InformationState) = covariance(s) * s.η
 
-struct SquareRootInformationState{T <: Number} <: AbstractStateEstimate
-    η::Vector{T}
-    Y::UpperTriangular{T}
-end
+@inline estimate!(out, s::InformationFilter) = mul!(out, covariance(s), s.η)
 
-@inline covariance(s::SquareRootInformationState) = (s.Y' * s.Y) \ I # TODO: improve
-@inline estimate(s::SquareRootInformationState) = covariance(s) * s.η
+@inline covariance!(out, s::InformationFilter) = out .= s.Λ \ I

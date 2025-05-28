@@ -28,7 +28,7 @@ abstract type AbstractKalmanFilter{T} <: AbstractSequentialFilter end
 
 include("kalman/utils.jl")
 
-export KalmanState, SquareRootKalmanState
+export KalmanState, SquareRootKalmanState, SigmaPointKalmanState
 export LinearStateModel, LinearObservationModel, ConstantGaussianNoise
 include("kalman/models.jl")
 
@@ -38,6 +38,10 @@ include("kalman/kf.jl")
 export SquareRootKalmanFilter,
     SquareRootKalmanFilterPrediction, SquareRootKalmanFilterUpdate
 include("kalman/srkf.jl")
+
+export SigmaPointsKalmanFilter,
+    SigmaPointsKalmanFilterPrediction, SigmaPointsKalmanFilterUpdate
+include("kalman/spkf.jl")
 
 # ------------------------------------------------------------------------------------------
 # Information filters API

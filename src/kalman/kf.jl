@@ -13,6 +13,8 @@ struct BaseKalmanFilter{
     up::U
 end
 
+@inline init!(kf::BaseKalmanFilter) = nothing
+
 function predict!(kf::BaseKalmanFilter{T}; u = missing, kwargs...) where {T}
     predict!(kf.est, kf.pre; u = u, kwargs...)
 end

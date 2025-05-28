@@ -65,12 +65,12 @@ function harmonic_oscillator(
 
     dt = 0.0:ΔT:Tf
     nt = length(dt)
-    xt = hcat([solution(t) for t in dt]...)'
+    xt = hcat([solution(t) for t in dt]...)
 
     # Simulated state and measurements
-    x = zeros(T, nt, nx)
-    x[1, :] = x0
-    z = zeros(T, nt, nz)
+    x = zeros(T, nx, nt)
+    x[:, 1] = x0
+    z = zeros(T, nz, nt)
     u = missing
     if !ismissing(ω)
         u = cos.(ω * dt)
@@ -79,11 +79,11 @@ function harmonic_oscillator(
     CRₖ = cholesky(Hermitian(Rₖ)).L
 
     for i in 2:nt
-        x[i, :] .= Fₖ * x[i-1, :] .+ CQₖ * randn(nx)
+        x[:, i] .= Fₖ * x[:, i-1] .+ CQₖ * randn(nx)
         if !ismissing(ω)
-            x[i, :] .+= Bₖ * u[i-1]
+            x[:, i] .+= Bₖ * u[i-1]
         end
-        z[i, :] .= H * x[i, :] .+ CRₖ * randn(nz)
+        z[:, i] .= H * x[:, i] .+ CRₖ * randn(nz)
     end
 
     # return the workspace
@@ -118,9 +118,9 @@ function run(
 
     for i in 2:nt
         if ismissing(u)
-            step!(filter, z[i, :])
+            step!(filter, z[:, i])
         else
-            step!(filter, z[i, :]; uk = u[i-1])
+            step!(filter, z[:, i]; uk = u[i-1])
         end
         est[i] = deepcopy(estimate(filter))
     end
@@ -128,36 +128,36 @@ function run(
 end
 
 function plot_estimates(estimates, t, xt, x)
-    x̂ = hcat([estimate(e) for e in estimates]...)'
-    cb = hcat([confidence(e) for e in estimates]...)'
+    x̂ = hcat([estimate(e) for e in estimates]...)
+    cb = hcat([confidence(e) for e in estimates]...)
 
     # Position plot
-    p1 = plot(t, xt[:, 1], label = "\$x_{g}(t)\$")
-    plot!(p1, t, x[:, 1], label = "\$x(t)\$", xlabel = "\$t\$", ylabel = "\$x(t)\$")
-    plot!(p1, t, x̂[:, 1], label = "\$\\hat{x}(t)\$", ribbon = cb[:, 1], fillalpha = 0.15)
+    p1 = plot(t, xt[1, :], label = "\$x_{g}(t)\$")
+    plot!(p1, t, x[1, :], label = "\$x(t)\$", xlabel = "\$t\$", ylabel = "\$x(t)\$")
+    plot!(p1, t, x̂[1, :], label = "\$\\hat{x}(t)\$", ribbon = cb[1, :], fillalpha = 0.15)
     plot!(
         p1,
         t,
-        x̂[:, 1] + cb[:, 1],
+        x̂[1, :] + cb[1, :],
         label = "\$3\\sigma\$",
         linestyle = :dash,
         color = :green
     )
-    plot!(p1, t, x̂[:, 1] - cb[:, 1], label = nothing, linestyle = :dash, color = :green)
+    plot!(p1, t, x̂[1, :] - cb[1, :], label = nothing, linestyle = :dash, color = :green)
 
     # Velocity plot
-    p2 = plot(t, xt[:, 2], label = "\$x_{g}(t)\$")
-    plot!(p2, t, x[:, 2], label = "\$x(t)\$", xlabel = "\$t\$", ylabel = "\$v(t)\$")
-    plot!(p2, t, x̂[:, 2], label = "\$\\hat{x}(t)\$", ribbon = cb[:, 2], fillalpha = 0.15)
+    p2 = plot(t, xt[2, :], label = "\$x_{g}(t)\$")
+    plot!(p2, t, x[2, :], label = "\$x(t)\$", xlabel = "\$t\$", ylabel = "\$v(t)\$")
+    plot!(p2, t, x̂[2, :], label = "\$\\hat{x}(t)\$", ribbon = cb[2, :], fillalpha = 0.15)
     plot!(
         p2,
         t,
-        x̂[:, 2] + cb[:, 2],
+        x̂[2, :] + cb[2, :],
         label = "\$3\\sigma\$",
         linestyle = :dash,
         color = :green
     )
-    plot!(p2, t, x̂[:, 2] - cb[:, 2], label = nothing, linestyle = :dash, color = :green)
+    plot!(p2, t, x̂[2, :] - cb[2, :], label = nothing, linestyle = :dash, color = :green)
 
     p = plot(p1, p2, layout = (2, 1), dpi = 1600, size = (800, 600), framestyle = :box)
     return p

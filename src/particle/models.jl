@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------------------------ 
 
 """
-    ParticleState{T} <: AbstractStateEstimate
+    ParticleState{T}
 
 State estimate represented by a weighted ensemble of particles.
 """
@@ -21,6 +21,8 @@ Return the weighted mean of the particles.
     return est.p' * est.w
 end
 
+@inline estimate!(out, est::ParticleState) = mul!(out, est.p', est.w)
+
 """
     covariance(est::ParticleState)
 
@@ -31,6 +33,8 @@ function covariance(est::ParticleState)
     X = est.p .- μ
     return X * Diagonal(est.w) * X'
 end
+
+@inline covariance!(out, est::ParticleState) = out .= covariance(est) # TODO: improve
 
 """
     normalize!(s::ParticleState)

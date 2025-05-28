@@ -5,6 +5,15 @@ Abstract base type for all filters.
 """
 abstract type AbstractFilter end
 
+"""
+    init!(filter::AbstractFilter)
+
+Perform initialization step of the filter.
+"""
+function init!(filter::AbstractFilter)
+    throw(MethodError(init!, (filter)))
+end
+
 # ——————————————————————————————————————————————————————————————————————————————————————————
 # Sequential filter API
 # ------------------------------------------------------------------------------------------
@@ -41,7 +50,7 @@ end
 """
     estimate(filter::AbstractSequentialFilter)
 
-Return the current best estimate.
+Return the current state estimate, as a child of `AbstractStateEstimate`.
 """
 function estimate(node::AbstractSequentialFilter)
     throw(MethodError(estimate, (node,)))
