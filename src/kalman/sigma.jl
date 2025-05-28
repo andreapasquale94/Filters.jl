@@ -29,7 +29,7 @@ function compute!(gen::UKFSigmaPoints{T}, sp::SigmaPointKalmanState{T}) where {T
     n = length(sp.x)
     λ = gen.α^2 * (n + gen.κ) - n
     γ = sqrt(n + λ)
-    S = cholesky(sp.P).L
+    S = cholesky(Hermitian(sp.P)).L
 
     @views begin
         sp.X[:, 1] .= sp.x
@@ -58,7 +58,7 @@ end
 function compute!(gen::CDKFSigmaPoints{T}, sp::SigmaPointKalmanState{T}) where {T}
     n = length(sp.x)
     γ = gen.h
-    S = cholesky(sp.P).L
+    S = cholesky(Hermitian(sp.P)).L
 
     @views begin
         sp.X[:, 1] .= sp.x

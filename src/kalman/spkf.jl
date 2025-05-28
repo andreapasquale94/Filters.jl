@@ -30,7 +30,7 @@ function predict!(
     @inbounds begin
         # State time update for all sigma points 
         @views for j in eachindex(est.Wc)
-            transition!(kfp.state, est.X[:, j], est.X[:, j]; u = u, kwargs...)
+            transition!(sfp.state, est.X[:, j], est.X[:, j]; u = u, kwargs...)
         end
         # Update state estimate
         est.x .= est.X * est.Wm
@@ -49,7 +49,7 @@ struct SigmaPointsKalmanFilterUpdate{
     T <: Number,
     O <: AbstractObservationModel,
     N <: AbstractTimeConstantNoiseModel
-} <: AbstractFilterPrediction
+} <: AbstractFilterUpdate
     obs::O
     noise::N
     K::Matrix{T}
@@ -112,7 +112,7 @@ function update!(
         end
 
         # Kalman gain
-        spu.K .= spu.Pxz / kfu.Pzz
+        spu.K .= spu.Pxz / spu.Pzz
 
         # Update state estimate
         est.x .+= spu.K * spu.y
