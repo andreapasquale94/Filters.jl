@@ -2,7 +2,7 @@
 struct SigmaPointsKalmanFilterPrediction{
     T <: Number,
     S <: AbstractStateModel,
-    N <: AbstractTimeConstantNoiseModel,
+    N <: AbstractWhiteNoiseModel,
     P <: AbstractSigmaPointsGenerator
 } <: AbstractFilterPrediction
     state::S
@@ -48,7 +48,7 @@ end
 struct SigmaPointsKalmanFilterUpdate{
     T <: Number,
     O <: AbstractObservationModel,
-    N <: AbstractTimeConstantNoiseModel
+    N <: AbstractWhiteNoiseModel
 } <: AbstractFilterUpdate
     obs::O
     noise::N
@@ -130,14 +130,6 @@ Implements a generic Sigma Points Kalman filter with a prediction and an update 
 const SigmaPointsKalmanFilter{T} = BaseKalmanFilter{
     T,
     SigmaPointKalmanState{T},
-    SigmaPointsKalmanFilterPrediction{
-        T,
-        <:AbstractStateModel,
-        <:AbstractTimeConstantNoiseModel
-    },
-    SigmaPointsKalmanFilterUpdate{
-        T,
-        <:AbstractObservationModel,
-        <:AbstractTimeConstantNoiseModel
-    }
+    SigmaPointsKalmanFilterPrediction{T, <:AbstractStateModel, <:AbstractWhiteNoiseModel},
+    SigmaPointsKalmanFilterUpdate{T, <:AbstractObservationModel, <:AbstractWhiteNoiseModel}
 }

@@ -18,6 +18,11 @@ end
 # Sequential filter API
 # ------------------------------------------------------------------------------------------
 
+"""
+    AbstractSequentialFilter
+
+Abstract base type for all sequential filters.
+"""
 abstract type AbstractSequentialFilter <: AbstractFilter end
 
 """
@@ -39,7 +44,7 @@ function update!(u::AbstractSequentialFilter, obs; kwargs...)
 end
 
 """
-    step!(node::AbstractSequentialFilter, obs; kwargs...)
+    step!(f::AbstractSequentialFilter, obs; kwargs...)
 
 Perform a full filtering step (predict + update).
 """
@@ -48,9 +53,9 @@ function step!(node::AbstractSequentialFilter, obs; kwargs...)
 end
 
 """
-    estimate(filter::AbstractSequentialFilter)
+    estimate(f::AbstractSequentialFilter)
 
-Return the current state estimate, as a child of `AbstractStateEstimate`.
+Return the current state estimate, as a child of [`AbstractStateEstimate`](@ref).
 """
 function estimate(node::AbstractSequentialFilter)
     throw(MethodError(estimate, (node,)))
@@ -60,6 +65,11 @@ end
 # Sequential filter prediction API
 # ------------------------------------------------------------------------------------------
 
+"""
+    AbstractFilterPrediction
+
+Abstract base type for all sequential filters prediction steps.
+"""
 abstract type AbstractFilterPrediction end
 
 """
@@ -75,6 +85,11 @@ end
 # Sequential filter update API
 # ------------------------------------------------------------------------------------------
 
+"""
+    AbstractFilterUpdate
+
+Abstract base type for all sequential filters update steps.
+"""
 abstract type AbstractFilterUpdate end
 
 """

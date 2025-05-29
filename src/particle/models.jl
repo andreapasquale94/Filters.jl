@@ -18,10 +18,10 @@ end
 Return the weighted mean of the particles.
 """
 @inline function estimate(est::ParticleState)
-    return est.p' * est.w
+    return est.p * est.w
 end
 
-@inline estimate!(out, est::ParticleState) = mul!(out, est.p', est.w)
+@inline estimate!(out, est::ParticleState) = mul!(out, est.p, est.w)
 
 """
     covariance(est::ParticleState)
@@ -29,12 +29,63 @@ end
 Return the weighted covariance of the particles.
 """
 function covariance(est::ParticleState)
-    μ = estimate(est)
-    X = est.p .- μ
+    X = est.p .- estimate(est)
     return X * Diagonal(est.w) * X'
 end
 
 @inline covariance!(out, est::ParticleState) = out .= covariance(est) # TODO: improve
+
+function variance!(out, est::ParticleState; μ = estimate(est))
+    fill!(out, 0.0)
+    n, N = size(est.p)
+    for i in 1:N
+        @inbounds @simd for j in 1:n
+            δ = est.p[j, i] - μ[j]
+            out[j] += est.w[i] * δ * δ
+        end
+    end
+    nothing
+end
+
+"""
+    variance(est::ParticleState)
+
+Return the variance of the particles' distribution.
+"""
+function variance(est::ParticleState)
+    out = zeros(eltype(est.p), size(est.p, 1))
+    variance!(out, est)
+    return out
+end
+
+function skewness!(out, est::ParticleState; μ = estimate(est), σ² = variance(est))
+    fill!(out, 0.0)
+    n, N = size(est.p)
+    for i in 1:N
+        @inbounds @simd for j in 1:n
+            δ = est.p[j, i] - μ[j]
+            out[j] += est.w[i] * (δ * δ * δ)
+        end
+    end
+    ϵ = eps(eltype(out)) # Avoid division by zero
+    @inbounds out ./= (σ² .^ (3 / 2)) .+ ϵ
+    nothing
+end
+
+"""
+    skewness(est::ParticleState)
+
+Return the skewness of the particles' distribution.
+"""
+function skewness(est::ParticleState)
+    out = zeros(eltype(est.p), size(est.p, 1))
+    σ² = similar(out)
+    μ = estimate(est)
+
+    variance!(σ², est, μ = μ)
+    skewness!(out, est, μ = μ, σ² = σ²)
+    return out
+end
 
 """
     normalize!(s::ParticleState)

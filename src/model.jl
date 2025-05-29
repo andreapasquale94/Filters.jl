@@ -35,7 +35,7 @@ end
     jacobian(model::AbstractStateModel)
 
 Return the Jacobian matrix of the state-transition function with respect to the state variables.
-This function needs to be called after `transition!`.
+This function needs to be called after [`transition!`](@ref).
 """
 function jacobian(m::AbstractStateModel)
     throw(MethodError(jacobian, (m)))
@@ -93,70 +93,29 @@ Abstract supertype for process or measurement noise models.
 """
 abstract type AbstractNoiseModel <: AbstractModel end
 
-# ——— Time‑constant noise ——————————————————————————————————————————————————————————————————
+# ——— White noise ——————————————————————————————————————————————————————————————————————————
 
 """
-    AbstractTimeConstantNoiseModel
+    AbstractWhiteNoiseModel
 
-Noise model with time-invariant statistics.
+Abstract supertype for process or measurement white noise models.
 """
-abstract type AbstractTimeConstantNoiseModel <: AbstractNoiseModel end
+abstract type AbstractWhiteNoiseModel <: AbstractNoiseModel end
 
 """
-    covariance(model::AbstractTimeConstantNoiseModel)
+    covariance(model::AbstractWhiteNoiseModel)
 
 Return the constant covariance matrix of the noise model.
 """
-function covariance(m::AbstractTimeConstantNoiseModel)
+function covariance(m::AbstractWhiteNoiseModel)
     throw(MethodError(covariance, (m)))
 end
 
 """
-    cholesky(model::AbstractTimeConstantNoiseModel)
+    cholesky(model::AbstractWhiteNoiseModel)
 
 Return the Cholesky factor of the constant covariance matrix.
 """
-function LinearAlgebra.cholesky(m::AbstractTimeConstantNoiseModel)
+function LinearAlgebra.cholesky(m::AbstractWhiteNoiseModel)
     throw(MethodError(cholesky, (m)))
-end
-
-# ——— Time‑dependent noise —————————————————————————————————————————————————————————————————
-
-"""
-    AbstractTimeDependantNoiseModel
-
-Noise model whose statistics vary with time. These processes do *not* need to be white:
-they may exhibit auto-correlation or any other temporal structure.
-"""
-abstract type AbstractTimeDependantNoiseModel <: AbstractNoiseModel end
-
-"""
-    covariance(model::AbstractTimeDependantNoiseModel, t)
-
-Return the instantaneous covariance matrix of the noise model at time `t`, i.e. `E[w(t)w(t)ᵀ]`.
-"""
-function covariance(m::AbstractTimeDependantNoiseModel, t)
-    throw(MethodError(covariance, (m, t)))
-end
-
-"""
-    cholesky(model::AbstractTimeDependantNoiseModel, t)
-
-Return the Cholesky factor of the instantaneous covariance.
-"""
-function LinearAlgebra.cholesky(m::AbstractTimeDependantNoiseModel, t)
-    throw(MethodError(cholesky, (m, t)))
-end
-
-"""
-    autocovariance(model::AbstractTimeDependantNoiseModel, t, Δt)
-
-Return the autocovariance matrix of the noise process between time `t` and time `t + Δt`,
-i.e. `E[w(t)w(t + Δt)ᵀ]`.
-
-If the noise is white this reduces to the instantaneous covariance for `Δt == 0` and `0` otherwise.
-Implement this method for coloured / auto-correlated noise models.
-"""
-function autocovariance(m::AbstractTimeDependantNoiseModel, t, Δt)
-    throw(MethodError(autocovariance, (m, t, Δt)))
 end

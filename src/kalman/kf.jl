@@ -49,7 +49,7 @@ end
 struct KalmanFilterPrediction{
     T <: Number,
     S <: AbstractStateModel,
-    N <: AbstractTimeConstantNoiseModel
+    N <: AbstractWhiteNoiseModel
 } <: AbstractFilterPrediction
     state::S
     noise::N
@@ -76,7 +76,7 @@ end
 struct KalmanFilterUpdate{
     T <: Number,
     O <: AbstractObservationModel,
-    N <: AbstractTimeConstantNoiseModel
+    N <: AbstractWhiteNoiseModel
 } <: AbstractFilterUpdate
     obs::O
     noise::N
@@ -142,6 +142,6 @@ Implements a generic Kalman filter with a prediction and an update step.
 const KalmanFilter{T} = BaseKalmanFilter{
     T,
     KalmanState{T},
-    KalmanFilterPrediction{T, <:AbstractStateModel, <:AbstractTimeConstantNoiseModel},
-    KalmanFilterUpdate{T, <:AbstractObservationModel, <:AbstractTimeConstantNoiseModel}
+    KalmanFilterPrediction{T, <:AbstractStateModel, <:AbstractWhiteNoiseModel},
+    KalmanFilterUpdate{T, <:AbstractObservationModel, <:AbstractWhiteNoiseModel}
 }

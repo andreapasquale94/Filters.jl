@@ -134,14 +134,14 @@ end
 # ------------------------------------------------------------------------------------------
 
 """
-    ConstantGaussianNoise{T}
+    GaussianWhiteNoise{T}
 
-Constant Gaussian noise with covariance `M`.
+Gaussian white noise with covariance `M`.
 """
-struct ConstantGaussianNoise{T <: Number} <: AbstractTimeConstantNoiseModel
+struct GaussianWhiteNoise{T <: Number} <: AbstractWhiteNoiseModel
     M::Matrix{T}
 end
 
-@inline covariance(noise::ConstantGaussianNoise) = noise.M
+@inline covariance(noise::GaussianWhiteNoise) = noise.M
 
-@inline LinearAlgebra.cholesky(noise::ConstantGaussianNoise) = cholesky(noise.M).L
+@inline LinearAlgebra.cholesky(noise::GaussianWhiteNoise) = cholesky(noise.M).L

@@ -50,8 +50,8 @@ function harmonic_oscillator(
 
     state_model = LinearStateModel(Fₖ, Bₖ)
     obs = LinearObservationModel(H, Float64[;;])
-    process_noise = ConstantGaussianNoise(Qₖ)
-    obs_noise = ConstantGaussianNoise(Rₖ)
+    process_noise = GaussianWhiteNoise(Qₖ)
+    obs_noise = GaussianWhiteNoise(Rₖ)
 
     # Exact solution 
     natural(t) = exp(F * t) * x0 # Natural response 

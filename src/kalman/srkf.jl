@@ -5,7 +5,7 @@
 struct SquareRootKalmanFilterPrediction{
     T <: Number,
     S <: AbstractStateModel,
-    N <: AbstractTimeConstantNoiseModel
+    N <: AbstractWhiteNoiseModel
 } <: AbstractFilterPrediction
     n::Int
     state::S
@@ -45,7 +45,7 @@ end
 struct SquareRootKalmanFilterUpdate{
     T <: Number,
     O <: AbstractObservationModel,
-    N <: AbstractTimeConstantNoiseModel
+    N <: AbstractWhiteNoiseModel
 } <: AbstractFilterUpdate
     n::Int
     m::Int
@@ -118,14 +118,6 @@ end
 const SquareRootKalmanFilter{T} = BaseKalmanFilter{
     T,
     SquareRootKalmanState{T},
-    SquareRootKalmanFilterPrediction{
-        T,
-        <:AbstractStateModel,
-        <:AbstractTimeConstantNoiseModel
-    },
-    SquareRootKalmanFilterUpdate{
-        T,
-        <:AbstractObservationModel,
-        <:AbstractTimeConstantNoiseModel
-    }
+    SquareRootKalmanFilterPrediction{T, <:AbstractStateModel, <:AbstractWhiteNoiseModel},
+    SquareRootKalmanFilterUpdate{T, <:AbstractObservationModel, <:AbstractWhiteNoiseModel}
 }

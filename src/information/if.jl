@@ -5,7 +5,7 @@
 struct InformationFilterPrediction{
     T <: Number,
     S <: AbstractStateModel,
-    N <: AbstractTimeConstantNoiseModel
+    N <: AbstractWhiteNoiseModel
 } <: AbstractFilterPrediction
     state::S
     noise::N
@@ -67,7 +67,7 @@ end
 struct InformationFilterUpdate{
     T <: Number,
     O <: AbstractObservationModel,
-    N <: AbstractTimeConstantNoiseModel
+    N <: AbstractWhiteNoiseModel
 } <: AbstractFilterUpdate
     obs::O
     noise::N
@@ -122,10 +122,6 @@ end
 const InformationFilter{T} = BaseKalmanFilter{
     T,
     InformationState{T},
-    InformationFilterPrediction{T, <:AbstractStateModel, <:AbstractTimeConstantNoiseModel},
-    InformationFilterUpdate{
-        T,
-        <:AbstractObservationModel,
-        <:AbstractTimeConstantNoiseModel
-    }
+    InformationFilterPrediction{T, <:AbstractStateModel, <:AbstractWhiteNoiseModel},
+    InformationFilterUpdate{T, <:AbstractObservationModel, <:AbstractWhiteNoiseModel}
 }

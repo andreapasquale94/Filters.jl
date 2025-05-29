@@ -6,18 +6,20 @@ using LinearAlgebra
 # Interface
 # ------------------------------------------------------------------------------------------
 
-export AbstractStateEstimate, estimate, covariance, confidence
+export AbstractStateEstimate
+export estimate, covariance, confidence
+export variance, skewness, kurtosis
 include("state.jl")
 
-export AbstractFilter
+export AbstractFilter, init!
 export AbstractSequentialFilter, predict!, update!, step!
 export AbstractFilterPrediction, AbstractFilterUpdate
 include("filter.jl")
 
 export AbstractModel
 export AbstractStateModel, AbstractObservationModel, transition!, observation!, jacobian
-export AbstractNoiseModel, AbstractTimeConstantNoiseModel, AbstractTimeDependantNoiseModel
-export cholesky
+export AbstractNoiseModel
+export AbstractWhiteNoiseModel, covariance, cholesky
 include("model.jl")
 
 # ——————————————————————————————————————————————————————————————————————————————————————————
@@ -29,7 +31,7 @@ abstract type AbstractKalmanFilter{T} <: AbstractSequentialFilter end
 include("kalman/utils.jl")
 
 export KalmanState, SquareRootKalmanState, SigmaPointKalmanState
-export LinearStateModel, LinearObservationModel, ConstantGaussianNoise
+export LinearStateModel, LinearObservationModel, GaussianWhiteNoise
 include("kalman/models.jl")
 
 export KalmanFilter, KalmanFilterPrediction, KalmanFilterUpdate
