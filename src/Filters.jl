@@ -48,6 +48,9 @@ export SigmaPointsKalmanFilter,
     SigmaPointsKalmanFilterPrediction, SigmaPointsKalmanFilterUpdate
 include("kalman/spkf.jl")
 
+export IteratedKalmanFilter, IteratedKalmanFilterUpdate
+include("kalman/ikf.jl")
+
 # ------------------------------------------------------------------------------------------
 # Information filters API
 # ------------------------------------------------------------------------------------------
