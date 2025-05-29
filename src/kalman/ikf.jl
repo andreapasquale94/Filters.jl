@@ -47,7 +47,7 @@ function update!(
 
             # Compute the innovation covariance
             R = covariance(kfu.noise)
-            H = jacobian(kfu.obs)
+            H = transition_matrix(kfu.obs)
             PHT = est.P * H' # TODO: cache
             kfu.S .= H * PHT .+ R
 

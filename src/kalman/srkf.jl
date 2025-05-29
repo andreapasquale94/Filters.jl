@@ -31,7 +31,7 @@ function predict!(
 
     # Predict covariance via QR of [F * √P  √Q]
     n = kfp.n
-    F = jacobian(kfp.state)
+    F = transition_matrix(kfp.state)
 
     @inbounds begin
         mul!(@views(kfp.cache[:, 1:n]), F, est.L)

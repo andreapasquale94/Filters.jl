@@ -17,7 +17,8 @@ export AbstractFilterPrediction, AbstractFilterUpdate
 include("filter.jl")
 
 export AbstractModel
-export AbstractStateModel, AbstractObservationModel, transition!, observation!, jacobian
+export AbstractStateModel, transition!, transition_matrix
+export AbstractObservationModel, observation!, jacobian
 export AbstractNoiseModel
 export AbstractWhiteNoiseModel, covariance, cholesky
 include("model.jl")
@@ -50,6 +51,9 @@ include("kalman/spkf.jl")
 
 export IteratedKalmanFilter, IteratedKalmanFilterUpdate
 include("kalman/ikf.jl")
+
+export FadingKalmanFilter, FadingKalmanFilterPrediction
+include("kalman/fading.jl")
 
 # ------------------------------------------------------------------------------------------
 # Information filters API

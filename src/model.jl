@@ -32,13 +32,12 @@ function transition!(m::AbstractStateModel, xn, t, Δt, x, p = missing; kwargs..
 end
 
 """
-    jacobian(model::AbstractStateModel)
+    transition_matrix(model::AbstractStateModel)
 
-Return the Jacobian matrix of the state-transition function with respect to the state variables.
-This function needs to be called after [`transition!`](@ref).
+Return the transition matrix. This function needs to be called after [`transition!`](@ref).
 """
-function jacobian(m::AbstractStateModel)
-    throw(MethodError(jacobian, (m)))
+function transition_matrix(m::AbstractStateModel)
+    throw(MethodError(transition_matrix, (m)))
 end
 
 # ——————————————————————————————————————————————————————————————————————————————————————————

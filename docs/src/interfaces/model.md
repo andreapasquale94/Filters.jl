@@ -18,7 +18,7 @@ Filters.AbstractStateModel
 ```@docs
 Filters.transition!(::AbstractStateModel, xn, x; kwargs...)
 Filters.transition!(::AbstractStateModel, xn, t, Δt, x, p; kwargs...)
-Filters.jacobian(::AbstractStateModel)
+Filters.transition_matrix(::AbstractStateModel)
 ```
 
 ## Observation models

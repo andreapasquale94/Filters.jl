@@ -68,7 +68,7 @@ function predict!(
     transition!(kfp.state, est.x, est.x; u = u, kwargs...)
     # Prediction error covariance time update
     Q = covariance(kfp.noise)
-    F = jacobian(kfp.state)
+    F = transition_matrix(kfp.state)
     @inbounds est.P .= F * est.P * F' .+ Q
     nothing
 end

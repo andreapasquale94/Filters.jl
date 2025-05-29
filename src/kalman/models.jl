@@ -96,7 +96,7 @@ function transition!(m::LinearStateModel, xn, x; u = missing, kwargs...)
     nothing
 end
 
-function jacobian(m::LinearStateModel)
+function transition_matrix(m::LinearStateModel)
     return m.F
 end
 

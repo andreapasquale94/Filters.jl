@@ -48,11 +48,11 @@ function predict!(
     end
 
     @inbounds begin
-        # State estimate time update (to compute the jacobian)
+        # State estimate time update (to compute the stm)
         ifp.x .= est.Λ \ est.η  # Convert information to state estimate 
         transition!(ifp.state, ifp.x, ifp.x; u = u, kwargs...)
         # Prediction error covariance time update
-        F = jacobian(ifp.state)
+        F = transition_matrix(ifp.state)
         F_inv = F \ I # TODO: improve, cache 
         ifp.M .= F_inv' * est.Λ * F_inv
         ifp.C .= ifp.M / (ifp.M + Q_inv)
