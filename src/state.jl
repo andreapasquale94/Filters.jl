@@ -6,29 +6,6 @@ Basic type for all state estimates types.
 abstract type AbstractStateEstimate end
 
 """
-    AbstractTimeConstantStateEstimate
-
-Basic type for all time-constant state estimates of type `T`.
-"""
-abstract type AbstractTimeConstantStateEstimate <: AbstractStateEstimate end
-
-"""
-    StateEstimate{T, S}
-
-Basic type for all state estimates of type `S` at time of type `T`.
-"""
-struct StateEstimate{T, S <: AbstractTimeConstantStateEstimate} <: AbstractStateEstimate
-    t::Base.RefValue{T}
-    x::S
-end
-
-function StateEstimate(x::S, t::T) where {S, T}
-    return StateEstimate{T, S}(x, Ref(t))
-end
-
-# ——— State estimate API ———————————————————————————————————————————————————————————————————
-
-"""
     estimate(est::AbstractStateEstimate)
 
 Returns the current state estimate.
@@ -182,39 +159,3 @@ Returns the current state kurtosis vector in-place, in `out`.
 function kurtosis!(out, est::AbstractStateEstimate)
     throw(MethodError(kurtosis!, (out, est)))
 end
-
-# ——— Model API ————————————————————————————————————————————————————————————————————————————
-
-"""
-    propagate!(model::AbstractStateModel, s::AbstractStateEstimate; Δt, u, θ, kwargs...)
-
-Propagate the current state estimate `s` to the next one in-place for a generic model.
-"""
-function propagate!(m::AbstractStateModel, s::AbstractStateEstimate; Δt, u, θ, kwargs...)
-    throw(MethodError(propagate!, (m, s, Δt, u, θ)))
-end
-
-"""
-    observe!(model::AbstractObservationModel, s::AbstractStateEstimate, z; kwargs...)
-
-Compute the expected measurement from state estimate `s`.
-Measurement is computed in-place in `z`.
-"""
-function observe!(m::AbstractObservationModel, s::AbstractStateEstimate, z; kwargs...)
-    throw(MethodError(observe!, (m, s, z)))
-end
-
-# ——— State estimate ———————————————————————————————————————————————————————————————————————
-
-@inline estimate(s::StateEstimate) = estimate(s.x)
-@inline estimate!(out, s::StateEstimate) = estimate!(out, s.x)
-@inline covariance(s::StateEstimate) = covariance(s.x)
-@inline covariance!(out, s::StateEstimate) = covariance!(out, s.x)
-@inline confidence(s::StateEstimate) = confidence(s.x)
-@inline confidence!(out, s::StateEstimate) = confidence!(out, s.x)
-@inline variance(s::StateEstimate) = variance(s.x)
-@inline variance!(out, s::StateEstimate) = variance!(out, s.x)
-@inline skewness(s::StateEstimate) = skewness(s.x)
-@inline skewness!(out, s::StateEstimate) = skewness!(out, s.x)
-@inline kurtosis(s::StateEstimate) = kurtosis(s.x)
-@inline kurtosis!(out, s::StateEstimate) = kurtosis!(out, s.x)

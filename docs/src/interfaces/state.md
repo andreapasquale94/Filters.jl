@@ -8,8 +8,6 @@ nonparametric forms.
 
 ```@docs
 AbstractStateEstimate
-AbstractTimeConstantStateEstimate
-StateEstimate
 ```
 
 ## Statistics 

@@ -6,15 +6,9 @@ using LinearAlgebra
 # Interface
 # ------------------------------------------------------------------------------------------
 
-export AbstractModel
-export AbstractStateModel, AbstractTimeConstantStateModel, propagate!, stm, psm
-export AbstractObservationModel, AbstractTimeConstantObservationModel, observe!, ojac
-export AbstractNoiseModel
-export AbstractWhiteNoiseModel, covariance, cholesky
-include("model.jl")
-
-export AbstractStateEstimate, AbstractTimeConstantStateEstimate, StateEstimate
-export estimate, covariance, confidence, variance, skewness, kurtosis
+export AbstractStateEstimate
+export estimate, covariance, confidence
+export variance, skewness, kurtosis
 include("state.jl")
 
 export AbstractFilter, init!
@@ -22,36 +16,72 @@ export AbstractSequentialFilter, predict!, update!, step!
 export AbstractFilterPrediction, AbstractFilterUpdate
 include("filter.jl")
 
-# ——————————————————————————————————————————————————————————————————————————————————————————
-# Utils (internal)
-# ------------------------------------------------------------------------------------------
-
-include("utils/cholesky.jl")
-include("utils/sigma.jl")
-
-# ——————————————————————————————————————————————————————————————————————————————————————————
-# Models
-# ------------------------------------------------------------------------------------------
-
-export LTIStateModel, LTIObservationModel
-include("models/lti.jl")
-
-export GaussianWhiteNoise
-include("models/noise.jl")
+export AbstractModel
+export AbstractStateModel, transition!, transition_matrix
+export AbstractObservationModel, observation!, jacobian
+export AbstractNoiseModel
+export AbstractWhiteNoiseModel, covariance, cholesky
+include("model.jl")
 
 # ——————————————————————————————————————————————————————————————————————————————————————————
 # Kalman filters API
 # ------------------------------------------------------------------------------------------
 
-"""
-    AbstractKalmanFilter{T}
-
-Abstract type for all Kalman-base sequential filters.
-"""
 abstract type AbstractKalmanFilter{T} <: AbstractSequentialFilter end
 
-export KalmanState, SquareRootKalmanState, SigmaPointsKalmanState
-include("kalman/state.jl")
-include("kalman/filter.jl")
+include("kalman/utils.jl")
+
+export KalmanState, SquareRootKalmanState, SigmaPointKalmanState
+export LinearStateModel, LinearObservationModel, GaussianWhiteNoise
+include("kalman/models.jl")
+
+export KalmanFilter, KalmanFilterPrediction, KalmanFilterUpdate
+include("kalman/kf.jl")
+
+export SquareRootKalmanFilter,
+    SquareRootKalmanFilterPrediction, SquareRootKalmanFilterUpdate
+include("kalman/srkf.jl")
+
+export UKFSigmaPoints, CDKFSigmaPoints, compute!
+include("kalman/sigma.jl")
+
+export SigmaPointsKalmanFilter,
+    SigmaPointsKalmanFilterPrediction, SigmaPointsKalmanFilterUpdate
+include("kalman/spkf.jl")
+
+export IteratedKalmanFilter, IteratedKalmanFilterUpdate
+include("kalman/ikf.jl")
+
+export FadingKalmanFilter, FadingKalmanFilterPrediction
+include("kalman/fading.jl")
+
+# ------------------------------------------------------------------------------------------
+# Information filters API
+# ------------------------------------------------------------------------------------------
+
+export InformationState
+include("information/models.jl")
+
+export InformationFilter, InformationFilterPrediction, InformationFilterUpdate
+include("information/if.jl")
+
+# ——————————————————————————————————————————————————————————————————————————————————————————
+# Particle filters API
+# ------------------------------------------------------------------------------------------
+
+abstract type AbstractParticleFilter{T} <: AbstractSequentialFilter end
+
+export ParticleState, normalize!, length, effective_samples
+export AbstractLikelihoodModel, likelihood
+include("particle/models.jl")
+
+export Resampling, resample!, trigger
+export EffectiveSamplesPolicy
+export NoResamplingAlgorithm, SystematicResamplingAlgorithm, MultinomialResamplingAlgorithm
+include("particle/resampling.jl")
+
+export BootstrapParticleFilter,
+    BootstrapParticleFilterPrediction, BootstrapParticleFilterUpdate
+include("particle/bootstrap.jl")
 
 end
