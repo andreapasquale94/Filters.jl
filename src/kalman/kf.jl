@@ -25,11 +25,11 @@ end
 
 function predict!(
     kfp::KalmanFilterPrediction{T, <:Any, <:Any},
-    est::S;
+    est::KalmanState{T};
     u = missing,
     θ = missing,
     kwargs...
-) where {T, S <: AbstractKalmanStateEstimate}
+) where {T}
     # State estimate time update
     propagate!(kfp.state, est.x, est.x; u = u, θ = θ, kwargs...)
     # Prediction error covariance time update 
@@ -38,13 +38,13 @@ function predict!(
 end
 
 function predict!(
-    kfp::KalmanFilterPrediction{T, <:Any, <:Any},
-    est::StateEstimate{T, S};
+    kfp::KalmanFilterPrediction{N, <:Any, <:Any},
+    est::StateEstimate{N, KalmanState{T}};
     Δt,
     u = missing,
     θ = missing,
     kwargs...
-) where {T, S <: AbstractKalmanStateEstimate}
+) where {N, T}
     # State estimate time update
     propagate!(kfp.state, est.x.x, est.x.x, est.t[]; Δt = Δt, u = u, θ = θ, kwargs...)
     est.t[] += Δt
@@ -85,10 +85,10 @@ end
 
 function __covariance_update!(
     kfu::KalmanFilterUpdate{T, <:Any, <:Any},
-    est::S,
+    est::KalmanState{T},
     z::AbstractVector{T};
     kwargs...
-) where {T, S <: AbstractKalmanStateEstimate}
+) where {T}
     @inbounds begin
         # Compute the innovation
         kfu.y .= z .- kfu.z

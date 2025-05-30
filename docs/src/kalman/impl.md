@@ -4,4 +4,5 @@
 KalmanFilter
 SquareRootKalmanFilter
 SigmaPointsKalmanFilter
+IteratedKalmanFilter
 ```

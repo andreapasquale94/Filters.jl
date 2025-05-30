@@ -99,10 +99,10 @@ end
 
 function __covariance_update!(
     kfu::SquareRootKalmanFilterUpdate{T, <:Any, <:Any},
-    est::S,
+    est::SquareRootKalmanState{T},
     z::AbstractVector{T};
     kwargs...
-) where {T, S <: AbstractKalmanStateEstimate}
+) where {T}
     H = ojac(kfu.obs)
     m, n = size(H)
     RL = cholesky(kfu.noise)

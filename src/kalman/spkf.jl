@@ -120,10 +120,10 @@ end
 
 function __covariance_update!(
     spu::SigmaPointsKalmanFilterUpdate{T, <:Any, <:Any},
-    est::S,
+    est::SigmaPointsKalmanState{T},
     z::AbstractVector{T};
     kwargs...
-) where {T, S <: AbstractKalmanStateEstimate}
+) where {T}
     @inbounds begin
         # Measurement prediction 
         spu.z .= spu.Z * est.Wm
