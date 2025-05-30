@@ -12,13 +12,14 @@ makedocs(;
         "Home" => "index.md",
         "Interfaces" => [
             "Model" => "interfaces/model.md",
-            "State" => "interfaces/state.md",
+            "State" => "interfaces/state.md"
             # "Filter" => "interfaces/filter.md"
         ],
         "Filters" => [
             "Kalman" => [
                 "State" => "kalman/state.md"
                 "Interface" => "kalman/filter.md"
+                "Filters" => "kalman/impl.md"
             ]
         ]
     ],

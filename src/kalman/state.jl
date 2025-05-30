@@ -74,16 +74,32 @@ function SigmaPointsKalmanState(x0::AbstractVector{T}, P0::AbstractMatrix{T}) wh
 end
 
 @inline estimate(s::SigmaPointsKalmanState) = s.x
-@inline estimate!(out, s::SigmaPointsKalmanState) = out .= s.x
+
+function estimate!(out, s::SigmaPointsKalmanState)
+    mul!(out, s.X, s.Wm)
+    nothing
+end
+
 @inline covariance(s::SigmaPointsKalmanState) = s.P
-@inline covariance!(out, s::SigmaPointsKalmanState) = out .= s.P
+
+function covariance!(
+    out,
+    s::SigmaPointsKalmanState{T};
+    dx = zeros(T, length(s.Wm))
+) where {T}
+    fill!(out, zero(T))
+    for j in eachindex(s.X, 2)
+        dx .= @views(s.X[:, j]) .- s.x
+        out .+= s.Wc[j] * (dx * dx')
+    end
+    nothing
+end
+
 @inline variance(s::SigmaPointsKalmanState) = diag(s.P)
 @inline variance!(out, s::SigmaPointsKalmanState) = out .= diag(s.P)
 
-function skewness!(out, s::SigmaPointsKalmanState{T}) where {T}
-    n, N = size(s.X)
-    dx = zeros(T, N)
-    for i in 1:n
+function skewness!(out, s::SigmaPointsKalmanState{T}; dx = zeros(T, length(s.Wm))) where {T}
+    for i in eachindex(s.X, 1)
         xᵢ = @views(s.X[i, :])
         μᵢ = dot(s.Wm, xᵢ)
         dx .= (xᵢ .- μᵢ) .^ 2
@@ -100,10 +116,8 @@ function skewness(s::SigmaPointsKalmanState{T}) where {T}
     return out
 end
 
-function kurtosis!(out, s::SigmaPointsKalmanState{T}) where {T}
-    n, N = size(s.X)
-    dx = zeros(T, N)
-    for i in 1:n
+function kurtosis!(out, s::SigmaPointsKalmanState{T}; dx = zeros(T, length(s.Wm))) where {T}
+    for i in eachindex(s.X, 1)
         xᵢ = @views(s.X[i, :])
         μᵢ = dot(s.Wm, xᵢ)
         dx .= (xᵢ .- μᵢ) .^ 2

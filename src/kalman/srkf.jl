@@ -165,10 +165,11 @@ end
 
 Implements a generic Square-Root Kalman Filter (SRKF).
 
-* * *
+----
 
     SquareRootKalmanFilter(s0::Union{KalmanState{S}, StateEstimate{T, KalmanState{S}}}, 
-        state_model::SM, obs_model::OM, process_noise::PN, obs_noise::ON, n_states::Int, n_obs::Int)
+        state_model::SM, obs_model::OM, process_noise::PN, obs_noise::ON, 
+        n_states::Int, n_obs::Int)
 
 Constructs a new SRKF with the initial state `s0`, a state model, an observation model,
 process (additive) noise, and observation (additive) noise.
@@ -219,7 +220,7 @@ function SquareRootKalmanFilter(
     PN <: AbstractWhiteNoiseModel,
     ON <: AbstractWhiteNoiseModel
 }
-    return KalmanFilter{T, N}(
+    return SquareRootKalmanFilter{T, N}(
         s0,
         SquareRootKalmanFilterPrediction{N}(state_model, process_noise, n_states),
         SquareRootKalmanFilterUpdate{N}(obs_model, obs_noise, n_states, n_obs)

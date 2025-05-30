@@ -54,4 +54,7 @@ include("kalman/kf.jl")
 export SquareRootKalmanFilter
 include("kalman/srkf.jl")
 
+export SigmaPointsKalmanFilter
+include("kalman/spkf.jl")
+
 end

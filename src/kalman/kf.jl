@@ -148,10 +148,11 @@ end
 
 Implements a generic Kalman Filter (KF).
 
-* * *
+----
 
     KalmanFilter(s0::Union{KalmanState{S}, StateEstimate{T, KalmanState{S}}}, 
-        state_model::SM, obs_model::OM, process_noise::PN, obs_noise::ON, n_states::Int, n_obs::Int)
+        state_model::SM, obs_model::OM, process_noise::PN, obs_noise::ON, 
+        n_states::Int, n_obs::Int)
 
 Constructs a new KF with the initial state `s0`, a state model, an observation model,
 process (additive) noise, and observation (additive) noise.
