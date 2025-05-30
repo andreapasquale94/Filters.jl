@@ -26,21 +26,21 @@ Abstract base type for all sequential filters.
 abstract type AbstractSequentialFilter <: AbstractFilter end
 
 """
-    predict!(p::AbstractSequentialFilter; kwargs...)
+    predict!(f::AbstractSequentialFilter; kwargs...)
 
 Perform the prediction step of a filter (prior).
 """
-function predict!(p::AbstractSequentialFilter; kwargs...)
-    throw(MethodError(predict!, (p)))
+function predict!(f::AbstractSequentialFilter; kwargs...)
+    throw(MethodError(predict!, (f)))
 end
 
 """
-    update!(u::AbstractFilter, obs; kwargs...)
+    update!(f::AbstractFilter, obs; kwargs...)
 
 Perform the update step of a filter (posterior), given the observation `obs`.
 """
-function update!(u::AbstractSequentialFilter, obs; kwargs...)
-    throw(MethodError(update!, (u, obs)))
+function update!(f::AbstractSequentialFilter, obs; kwargs...)
+    throw(MethodError(update!, (f, obs)))
 end
 
 """
@@ -48,17 +48,17 @@ end
 
 Perform a full filtering step (predict + update).
 """
-function step!(node::AbstractSequentialFilter, obs; kwargs...)
-    throw(MethodError(step!, (node, obs)))
+function step!(f::AbstractSequentialFilter, obs; kwargs...)
+    throw(MethodError(step!, (f, obs)))
 end
 
 """
-    estimate(f::AbstractSequentialFilter)
+    estimate(f::AbstractSequentialFilter) -> s
 
 Return the current state estimate, as a child of [`AbstractStateEstimate`](@ref).
 """
-function estimate(node::AbstractSequentialFilter)
-    throw(MethodError(estimate, (node,)))
+function estimate(f::AbstractSequentialFilter)
+    throw(MethodError(estimate, (f,)))
 end
 
 # ------------------------------------------------------------------------------------------
@@ -73,11 +73,12 @@ Abstract base type for all sequential filters prediction steps.
 abstract type AbstractFilterPrediction end
 
 """
-    predict!(est::AbstractStateEstimate, p::AbstractFilterPrediction; kwargs...)
+    predict!(p::AbstractFilterPrediction, est::AbstractStateEstimate; kwargs...)
 
 Perform the prediction step of a filter (prior) and update the estimate accordingly.
+Prediction performed in-place in `est`.
 """
-function predict!(est::AbstractStateEstimate, p::AbstractFilterPrediction; kwargs...)
+function predict!(p::AbstractFilterPrediction, est::AbstractStateEstimate; kwargs...)
     throw(MethodError(predict!, (est, p)))
 end
 
@@ -93,10 +94,11 @@ Abstract base type for all sequential filters update steps.
 abstract type AbstractFilterUpdate end
 
 """
-    update!(est::AbstractStateEstimate, u::AbstractFilterUpdate, obs; kwargs...)
+    update!(u::AbstractFilterUpdate, est::AbstractStateEstimate,  z; kwargs...)
 
-Perform the update step of a filter (posterior), given the observation `obs`.
+Perform the update step of a filter (posterior), given the observation `z`.
+Update performed in-place in `est`.
 """
-function update!(est::AbstractStateEstimate, u::AbstractFilterUpdate, obs; kwargs...)
-    throw(MethodError(update!, (est, u, obs)))
+function update!(u::AbstractFilterUpdate, est::AbstractStateEstimate, obs; kwargs...)
+    throw(MethodError(update!, (u, est, obs)))
 end

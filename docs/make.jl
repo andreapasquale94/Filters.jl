@@ -1,5 +1,4 @@
 using Documenter
-using DocumenterMermaid
 using Filters
 
 const CI = get(ENV, "CI", "false") == "true"
@@ -12,9 +11,15 @@ makedocs(;
     pages = [
         "Home" => "index.md",
         "Interfaces" => [
-            "State" => "interfaces/state.md",
             "Model" => "interfaces/model.md",
-            "Filter" => "interfaces/filter.md"
+            "State" => "interfaces/state.md",
+            # "Filter" => "interfaces/filter.md"
+        ],
+        "Filters" => [
+            "Kalman" => [
+                "State" => "kalman/state.md"
+                "Interface" => "kalman/filter.md"
+            ]
         ]
     ],
     clean = true,

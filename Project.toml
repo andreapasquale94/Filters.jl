@@ -2,7 +2,6 @@ name = "Filters"
 uuid = "05cbd843-ce82-451d-85d4-6d3d7261a4b5"
 
 [deps]
-FunctionWrappers = "069b7b12-0de2-55c6-9aab-29f3d0a68a2e"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [extras]
