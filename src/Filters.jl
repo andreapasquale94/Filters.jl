@@ -60,4 +60,7 @@ include("kalman/spkf.jl")
 export IteratedKalmanFilter
 include("kalman/ikf.jl")
 
+export FadingMemoryKalmanFilter
+include("kalman/fading.jl")
+
 end
