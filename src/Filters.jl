@@ -43,15 +43,15 @@ include("models/noise.jl")
 # Kalman filters API
 # ------------------------------------------------------------------------------------------
 
-"""
-    AbstractKalmanFilter{T}
-
-Abstract type for all Kalman-base sequential filters.
-"""
-abstract type AbstractKalmanFilter{T} <: AbstractSequentialFilter end
-
+export AbstractKalmanStateEstimate
 export KalmanState, SquareRootKalmanState, SigmaPointsKalmanState
 include("kalman/state.jl")
 include("kalman/filter.jl")
+
+export KalmanFilter
+include("kalman/kf.jl")
+
+export SquareRootKalmanFilter
+include("kalman/srkf.jl")
 
 end

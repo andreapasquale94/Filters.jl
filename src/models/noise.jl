@@ -6,7 +6,7 @@ Gaussian white noise with covariance `P` and cholesky, lower triangular matrix `
 struct GaussianWhiteNoise{T <: Number} <: AbstractWhiteNoiseModel
     P::Matrix{T}
     L::LowerTriangular{T}
-    function GaussianWhiteNoise(Σ::Matrix{T}) where T
+    function GaussianWhiteNoise(Σ::Matrix{T}) where {T}
         return new{T}(Σ, cholesky(Σ).L)
     end
 end

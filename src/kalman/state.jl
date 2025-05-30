@@ -1,9 +1,11 @@
+abstract type AbstractKalmanStateEstimate <: AbstractTimeConstantStateEstimate end
+
 """
     KalmanState{T}
 
 Kalman state estimate, storing the state estimate `x` and its error covariance `P`.
 """
-struct KalmanState{T <: Number} <: AbstractTimeConstantStateEstimate
+struct KalmanState{T <: Number} <: AbstractKalmanStateEstimate
     x::Vector{T}
     P::Matrix{T}
 end
@@ -14,12 +16,12 @@ end
 @inline covariance!(out, s::KalmanState) = out .= s.P
 @inline variance(s::KalmanState) = diag(s.P)
 @inline variance!(out, s::KalmanState) = out .= diag(s.P)
-@inline skewness(s::KalmanState{T}) where T = zeros(T, length(s.x))
+@inline skewness(s::KalmanState{T}) where {T} = zeros(T, length(s.x))
 @inline skewness!(out, ::KalmanState) = fill!(out, 0)
-@inline kurtosis(s::KalmanState{T}) where T = 3ones(T, length(s.x))
+@inline kurtosis(s::KalmanState{T}) where {T} = 3ones(T, length(s.x))
 @inline kurtosis!(out, ::KalmanState) = fill!(out, 3)
 
-# ------------------------------------------------------------------------------------------
+# ——————————————————————————————————————————————————————————————————————————————————————————
 
 """
     SquareRootKalmanState{T}
@@ -27,7 +29,7 @@ end
 Kalman state estimate for a square-root filter, storing the state estimate `x` and the
 error covariance lower triangular Cholesky factor, `L`.
 """
-struct SquareRootKalmanState{T <: Number} <: AbstractTimeConstantStateEstimate
+struct SquareRootKalmanState{T <: Number} <: AbstractKalmanStateEstimate
     x::Vector{T}
     L::LowerTriangular{T}
 end
@@ -38,13 +40,12 @@ end
 @inline covariance!(out, s::SquareRootKalmanState) = mul!(out, s.L, s.L')
 @inline variance(s::SquareRootKalmanState) = diag(covariance(s))
 @inline variance!(out, s::SquareRootKalmanState) = out .= diag(covariance(s))
-@inline skewness(s::SquareRootKalmanState{T}) where T = zeros(T, length(s.x))
+@inline skewness(s::SquareRootKalmanState{T}) where {T} = zeros(T, length(s.x))
 @inline skewness!(out, ::SquareRootKalmanState) = fill!(out, 0)
-@inline kurtosis(s::SquareRootKalmanState{T}) where T = 3ones(T, length(s.x))
+@inline kurtosis(s::SquareRootKalmanState{T}) where {T} = 3ones(T, length(s.x))
 @inline kurtosis!(out, ::SquareRootKalmanState) = fill!(out, 3)
 
-
-# ------------------------------------------------------------------------------------------
+# ——————————————————————————————————————————————————————————————————————————————————————————
 
 """
     SigmaPointsKalmanState{T}
@@ -53,7 +54,7 @@ Kalman state estimate for a sigma-point filter, storing the sigma points `X`, th
 for the mean `Wm` and the ones for the covariance `Wc` as well as the latest state `x` and
 covariance `P`.
 """
-struct SigmaPointsKalmanState{T <: Number} <: AbstractTimeConstantStateEstimate
+struct SigmaPointsKalmanState{T <: Number} <: AbstractKalmanStateEstimate
     X::Matrix{T}
     Wm::Vector{T}
     Wc::Vector{T}
@@ -79,7 +80,7 @@ end
 @inline variance(s::SigmaPointsKalmanState) = diag(s.P)
 @inline variance!(out, s::SigmaPointsKalmanState) = out .= diag(s.P)
 
-function skewness!(out, s::SigmaPointsKalmanState{T}) where T
+function skewness!(out, s::SigmaPointsKalmanState{T}) where {T}
     n, N = size(s.X)
     dx = zeros(T, N)
     for i in 1:n
@@ -93,13 +94,13 @@ function skewness!(out, s::SigmaPointsKalmanState{T}) where T
     nothing
 end
 
-function skewness(s::SigmaPointsKalmanState{T}) where T
+function skewness(s::SigmaPointsKalmanState{T}) where {T}
     out = zeros(T, length(s.x))
     skewness!(out, s)
     return out
 end
 
-function kurtosis!(out, s::SigmaPointsKalmanState{T}) where T
+function kurtosis!(out, s::SigmaPointsKalmanState{T}) where {T}
     n, N = size(s.X)
     dx = zeros(T, N)
     for i in 1:n
@@ -113,8 +114,18 @@ function kurtosis!(out, s::SigmaPointsKalmanState{T}) where T
     nothing
 end
 
-function kurtosis(s::SigmaPointsKalmanState{T}) where T
+function kurtosis(s::SigmaPointsKalmanState{T}) where {T}
     out = zeros(T, length(s.x))
     kurtosis!(out, s)
     return out
+end
+
+# ——— Sigma points overloads ———————————————————————————————————————————————————————————————
+
+function compute!(gen::UKFSigmaPoints{T}, s::SigmaPointsKalmanState{N}) where {T, N}
+    compute!(gen, s.X, s.Wm, s.Wc, s.x, s.P)
+end
+
+function compute!(gen::CDKFSigmaPoints{T}, s::SigmaPointsKalmanState{N}) where {T, N}
+    compute!(gen, s.X, s.Wm, s.Wc, s.x, s.P)
 end

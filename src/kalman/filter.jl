@@ -1,19 +1,26 @@
 
 """
+    AbstractKalmanFilter{T}
+
+Abstract type for all Kalman-base sequential filters.
+"""
+abstract type AbstractKalmanFilter{T} <: AbstractSequentialFilter end
+
+"""
     BaseKalmanFilter{T, S, P, U}
 
 A generic Kalman filter container parametrized by types:
 
-- `T <: Number`: Numeric type for the state elements.
-- `S <: AbstractStateEstimate`: Type representing the state estimate.
-- `P <: AbstractFilterPrediction`: Type responsible for the prediction step.
-- `U <: AbstractFilterUpdate`: Type responsible for the update step.
+  - `T <: Number`: Numeric type for the state elements.
+  - `S <: AbstractStateEstimate`: Type representing the state estimate.
+  - `P <: AbstractFilterPrediction`: Type responsible for the prediction step.
+  - `U <: AbstractFilterUpdate`: Type responsible for the update step.
 
 ### Fields
 
-- `est`: Current state estimate.
-- `pre`: Prediction component.
-- `up`: Update component.
+  - `est`: Current state estimate.
+  - `pre`: Prediction component.
+  - `up`: Update component.
 
 Bundles prediction and update logic into a single filter object.
 """
@@ -38,7 +45,7 @@ Initialize or reset the Kalman filter state. Default method does nothing; can be
 """
     predict!(kf::BaseKalmanFilter{T}; kwargs...)
 
-Perform the prediction step by delegating to the filter’s prediction component.  
+Perform the prediction step by delegating to the filter's prediction component.
 Keyword arguments are forwarded to the prediction step.
 """
 function predict!(f::BaseKalmanFilter{T}; kwargs...) where {T}
@@ -48,7 +55,7 @@ end
 """
     update!(f::BaseKalmanFilter{T}, z::AbstractVector{T}; kwargs...)
 
-Perform the update step with measurements `z` by delegating to the filter’s update component.  
+Perform the update step with measurements `z` by delegating to the filter's update component.
 Keyword arguments are forwarded to the update step.
 """
 function update!(f::BaseKalmanFilter{T}, z::AbstractVector{T}; kwargs...) where {T}
@@ -59,10 +66,10 @@ end
     step!(f::BaseKalmanFilter{T}, z::AbstractVector{T}; Δt = missing, θ = missing, 
           u₋ = missing, u₊ = missing, kwargs...)
 
-Perform one filter step: prediction followed by update.  
+Perform one filter step: prediction followed by update.
 
-The prediction step receives `Δt`, control input `u₋`, and parameters `θ`.  
-The update step receives the measurement `z`, `Δt`, control input `u₊`, and `θ`.  
+The prediction step receives `Δt`, control input `u₋`, and parameters `θ`.
+The update step receives the measurement `z`, `Δt`, control input `u₊`, and `θ`.
 Additional keyword arguments are forwarded to both steps.
 """
 function step!(
