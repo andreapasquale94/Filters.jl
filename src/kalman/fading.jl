@@ -64,6 +64,6 @@ Implements a generic fading memory Kalman filter (FM-KF).
 const FadingMemoryKalmanFilter{T, S} = BaseKalmanFilter{
     S,
     Union{KalmanState{S}, StateEstimate{T, KalmanState{S}}},
-    FadingKalmanFilterPrediction{S, <:AbstractStateModel, <:AbstractWhiteNoiseModel},
+    FadingMemoryKalmanFilterPrediction{S, <:AbstractStateModel, <:AbstractWhiteNoiseModel},
     KalmanFilterUpdate{S, <:AbstractObservationModel, <:AbstractWhiteNoiseModel}
 }

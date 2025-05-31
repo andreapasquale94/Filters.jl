@@ -132,8 +132,7 @@ function __covariance_update!(
 
         # Innovation covariance
         fill!(spu.Pxz, zero(T))
-        R = covariance(spu.noise)
-        spu.Pzz .= R
+        spu.Pzz .= covariance(spu.noise)
 
         @views for j in eachindex(est.Wc)
             spu.dx .= est.X[:, j] .- est.x
@@ -205,7 +204,7 @@ end
 
 Implements a generic Sigma-Points Kalman Filter (SPKF).
 
-----
+* * *
 
     SigmaPointsKalmanFilter(
         s0::Union{SigmaPointsKalmanState{S}, StateEstimate{T, SigmaPointsKalmanState{S}}}, 

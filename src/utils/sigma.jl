@@ -87,7 +87,7 @@ function compute!(
     Wm::AbstractVector{N},
     Wc::AbstractVector{N},
     x::AbstractVector{N},
-    S::AbstractMatrix{N}
+    S::LowerTriangular{N}
 ) where {T <: Number, N <: Number}
     n = length(x)
     γ = gen.h

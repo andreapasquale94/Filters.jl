@@ -88,7 +88,7 @@ function covariance!(
     dx = zeros(T, length(s.Wm))
 ) where {T}
     fill!(out, zero(T))
-    for j in eachindex(s.X, 2)
+    @inbounds for j in eachindex(s.Wc)
         dx .= @views(s.X[:, j]) .- s.x
         out .+= s.Wc[j] * (dx * dx')
     end
@@ -99,7 +99,7 @@ end
 @inline variance!(out, s::SigmaPointsKalmanState) = out .= diag(s.P)
 
 function skewness!(out, s::SigmaPointsKalmanState{T}; dx = zeros(T, length(s.Wm))) where {T}
-    for i in eachindex(s.X, 1)
+    @inbounds for i in eachindex(s.X, 1)
         xᵢ = @views(s.X[i, :])
         μᵢ = dot(s.Wm, xᵢ)
         dx .= (xᵢ .- μᵢ) .^ 2
@@ -117,7 +117,7 @@ function skewness(s::SigmaPointsKalmanState{T}) where {T}
 end
 
 function kurtosis!(out, s::SigmaPointsKalmanState{T}; dx = zeros(T, length(s.Wm))) where {T}
-    for i in eachindex(s.X, 1)
+    @inbounds for i in eachindex(s.X, 1)
         xᵢ = @views(s.X[i, :])
         μᵢ = dot(s.Wm, xᵢ)
         dx .= (xᵢ .- μᵢ) .^ 2
