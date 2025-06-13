@@ -1,44 +1,87 @@
 module Filters
 
 using LinearAlgebra
-using StaticArrays
-using FunctionWrappers: FunctionWrapper
 
-include("utils/linalg.jl")
+# ——————————————————————————————————————————————————————————————————————————————————————————
+# Interface
+# ------------------------------------------------------------------------------------------
 
-export AbstractFilter, AbstractSequentialFilter, AbstractBatchFilter, AbstractSmoother,
-    predict!, update!, estimate, predict, update,
-    covariance, loglikelihood,
-    AbstractFilterCache, empty!, resize!
-include("interface.jl")
-include("cache.jl")
+export AbstractStateEstimate
+export estimate, covariance, confidence
+export variance, skewness, kurtosis
+include("state.jl")
 
-# ==========================================================================================
-# Kalman filters
+export AbstractFilter, init!
+export AbstractSequentialFilter, predict!, update!, step!
+export AbstractFilterPrediction, AbstractFilterUpdate
+include("filter.jl")
 
-include("kalman/interface.jl")
+export AbstractModel
+export AbstractStateModel, transition!, transition_matrix
+export AbstractObservationModel, observation!, jacobian
+export AbstractNoiseModel
+export AbstractWhiteNoiseModel, covariance, cholesky
+include("model.jl")
 
-export KalmanFilterCache, KalmanFilterSCache
-include("kalman/cache.jl")
+# ——————————————————————————————————————————————————————————————————————————————————————————
+# Kalman filters API
+# ------------------------------------------------------------------------------------------
 
-export KalmanFilter
+abstract type AbstractKalmanFilter{T} <: AbstractSequentialFilter end
+
+include("kalman/utils.jl")
+
+export KalmanState, SquareRootKalmanState, SigmaPointKalmanState
+export LinearStateModel, LinearObservationModel, GaussianWhiteNoise
+include("kalman/models.jl")
+
+export KalmanFilter, KalmanFilterPrediction, KalmanFilterUpdate
 include("kalman/kf.jl")
 
-export SquareRootKalmanFilter
+export SquareRootKalmanFilter,
+    SquareRootKalmanFilterPrediction, SquareRootKalmanFilterUpdate
 include("kalman/srkf.jl")
 
-export ExtendedKalmanFilter
-include("kalman/ekf.jl")
+export UKFSigmaPoints, CDKFSigmaPoints, compute!
+include("kalman/sigma.jl")
 
-# ==========================================================================================
-# Particle filters 
+export SigmaPointsKalmanFilter,
+    SigmaPointsKalmanFilterPrediction, SigmaPointsKalmanFilterUpdate
+include("kalman/spkf.jl")
 
-export ParticleFilter, resample!, Resampling
-include("particle/interface.jl")
-include("particle/filter.jl")
+export IteratedKalmanFilter, IteratedKalmanFilterUpdate
+include("kalman/ikf.jl")
 
+export FadingKalmanFilter, FadingKalmanFilterPrediction
+include("kalman/fading.jl")
+
+# ------------------------------------------------------------------------------------------
+# Information filters API
+# ------------------------------------------------------------------------------------------
+
+export InformationState
+include("information/models.jl")
+
+export InformationFilter, InformationFilterPrediction, InformationFilterUpdate
+include("information/if.jl")
+
+# ——————————————————————————————————————————————————————————————————————————————————————————
+# Particle filters API
+# ------------------------------------------------------------------------------------------
+
+abstract type AbstractParticleFilter{T} <: AbstractSequentialFilter end
+
+export ParticleState, normalize!, length, effective_samples
+export AbstractLikelihoodModel, likelihood
+include("particle/models.jl")
+
+export Resampling, resample!, trigger
+export EffectiveSamplesPolicy
 export NoResamplingAlgorithm, SystematicResamplingAlgorithm, MultinomialResamplingAlgorithm
-export EffectiveSamplePolicy
 include("particle/resampling.jl")
+
+export BootstrapParticleFilter,
+    BootstrapParticleFilterPrediction, BootstrapParticleFilterUpdate
+include("particle/bootstrap.jl")
 
 end

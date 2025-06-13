@@ -1,140 +1,123 @@
-"""
-    SquareRootKalmanFilter{T} <: AbstractSequentialFilter{T}
+# ——————————————————————————————————————————————————————————————————————————————————————————
+# Time-constant square-root Kalman filters 
+# ------------------------------------------------------------------------------------------
 
-Square-root formulation of the classic linear Kalman filter using
-Cholesky factors of covariance matrices.
-
-This implementation improves numerical stability by maintaining only the
-lower-triangular Cholesky factors of the covariance matrices.
-
-The system is defined by:
-
-- **State transition**:  `xₖ = F*xₖ₋₁ + B*uₖ + wₖ`,  where `wₖ ∼ 𝒩(0, Qₖ)`
-- **Observation**:       `zₖ = H*xₖ + D*uₖ + vₖ`,    where `vₖ ∼ 𝒩(0, Rₖ)`
-
-### Fields
-
-#### Dimensions
-- `n` — Dimension of the state vector.
-- `m` — Dimension of the measurement vector.
-
-#### State estimate
-- `x` — Current estimate of the state.
-- `sqrtP` — Cholesky factor of the state covariance.
-
-#### System model
-- `F` — State transition matrix.
-- `B` — Control input matrix.
-- `sqrtQ` — Cholesky factor of process noise covariance.
-- `H` — Observation matrix.
-- `D` — Control-to-observation matrix.
-- `sqrtR` — Cholesky factor of observation noise covariance.
-
-#### Diagnostics
-These fields store intermediate quantities from the *most recent measurement update* 
-(useful for debugging or adaptive filtering):
-
-- `z` — Predicted measurement.
-- `y` — Innovation (residual).
-- `sqrtS` — Cholesky factor of innovation covariance.
-- `K` — Kalman gain from the last update.
-"""
-struct SquareRootKalmanFilter{T} <: AbstractKalmanFilter{T}
+struct SquareRootKalmanFilterPrediction{
+    T <: Number,
+    S <: AbstractStateModel,
+    N <: AbstractWhiteNoiseModel
+} <: AbstractFilterPrediction
     n::Int
-    m::Int
-    x::Vector{T}
-    sqrtP::LowerTriangular{T}
-    F::Matrix{T}
-    B::Union{Matrix{T},Nothing}
-    sqrtQ::LowerTriangular{T}
-    H::Matrix{T}
-    D::Union{Matrix{T},Nothing}
-    sqrtR::LowerTriangular{T}
-    z::Vector{T}
-    y::Vector{T}
-    sqrtS::LowerTriangular{T}
-    K::Matrix{T}
-    M::Matrix{T}
-    U::Matrix{T}
-end
-
-function SquareRootKalmanFilter{T}(
-    nx::Int, m::Int, x0, sqrtP0, F0, B0, sqrtQ0, H0, D0, sqrtR0) where {T}
-    z0 = zeros(T, m)
-    y0 = zeros(T, m)
-    S0 = LowerTriangular(Matrix{T}(I, m, m))
-    K0 = zeros(T, nx, m)
-
-    M = zeros(T, max(nx, m), 2max(nx, m))
-    U = zeros(T, nx, m)
-    return SquareRootKalmanFilter(
-        nx, m,
-        copy(x0), LowerTriangular(copy(sqrtP0)),
-        F0, B0, LowerTriangular(sqrtQ0),
-        H0, D0, LowerTriangular(sqrtR0),
-        z0, y0, S0, K0, M, U)
-end
-
-# ==========================================================================================================
-
-@inline nstates(filter::SquareRootKalmanFilter) = filter.n
-@inline nobs(filter::SquareRootKalmanFilter) = filter.m
-@inline ncontrol(filter::SquareRootKalmanFilter) = filter.B === nothing ? 0 : size(filter.B, 2)
-@inline islinear(filter::SquareRootKalmanFilter) = true
-
-function Base.show(io::IO, kf::SquareRootKalmanFilter{T}) where T
-    println(io, "SquareRootKalmanFilter{$T}")
-    println(io, " x̂: ", estimate(kf))
-    println(io, " P: ", covariance(kf))
-    return
-end
-
-# ==========================================================================================================
-
-function predict!(kf::SquareRootKalmanFilter{T}; u=nothing) where {T}
-    # Predict the state
-    if kf.B !== nothing && u !== nothing
-        kf.x .= kf.F * kf.x .+ kf.B * u
-    else
-        kf.x .= kf.F * kf.x
+    state::S
+    noise::N
+    cache::Matrix{T}
+    function SquareRootKalmanFilterPrediction{T}(
+        state::S,
+        noise::N,
+        n_states::Int
+    ) where {T, S, N}
+        return new{T, S, N}(n_states, state, noise, zeros(T, n_states, 2n_states))
     end
-
-    # Predict covariance via QR of [F * sqrtP  sqrtQ]
-    mul!(@views(kf.M[1:kf.n, 1:kf.n]), kf.F, kf.sqrtP)
-    copyto!(@views(kf.M[1:kf.n, kf.n+1:2kf.n]), kf.sqrtQ)
-    _, R̃ = qr!(kf.M[1:kf.n, 1:2kf.n]')
-    kf.sqrtP .= LowerTriangular(R̃')
-    return nothing
 end
 
-function update!(kf::SquareRootKalmanFilter{T}, z::AbstractVector{T}; u=nothing) where {T}
-    # Measurement prediction
-    if kf.D !== nothing && u !== nothing
-        kf.z .= kf.H * kf.x .+ kf.D * u
-    else
-        kf.z .= kf.H * kf.x
+function predict!(
+    est::SquareRootKalmanState{T},
+    kfp::SquareRootKalmanFilterPrediction;
+    u = missing,
+    kwargs...
+) where {T}
+    # State estimate time update    
+    transition!(kfp.state, est.x, est.x; u = u, kwargs...)
+
+    # Predict covariance via QR of [F * √P  √Q]
+    n = kfp.n
+    F = transition_matrix(kfp.state)
+
+    @inbounds begin
+        mul!(@views(kfp.cache[:, 1:n]), F, est.L)
+        copyto!(@views(kfp.cache[:, n+1:end]), cholesky(kfp.noise))
+        _, R̃ = qr!(kfp.cache[:, 1:n]')
+        est.L .= LowerTriangular(R̃')
     end
-
-    # Innovation
-    kf.y .= z .- kf.z
-
-    # Innovation covariance cholesky factor
-    mul!(@views(kf.M[1:kf.m, 1:kf.n]), kf.H, kf.sqrtP)
-    copyto!(@views(kf.M[1:kf.m, kf.n+1:(kf.n+kf.m)]), kf.sqrtR)
-    _, R̃ = qr!(kf.M[1:kf.m, 1:(kf.n+kf.m)]')
-    kf.sqrtS .= LowerTriangular(R̃')
-
-    # Kalman gain
-    kf.K .= ((kf.sqrtP * (kf.H * kf.sqrtP)') / kf.sqrtS') / kf.sqrtS
-
-    # State update
-    kf.x .+= kf.K * kf.y
-    # Covariance cholesky factor update
-    kf.U .= kf.K * kf.sqrtR'
-    cholesky_downdate!(kf.sqrtP, kf.U)
     nothing
 end
 
-@inline estimate(kf::SquareRootKalmanFilter) = kf.x
-@inline covariance(kf::SquareRootKalmanFilter) = kf.sqrtP * kf.sqrtP'
-@inline loglikelihood(kf::SquareRootKalmanFilter) = -0.5 * (kf.m * log(2π) + 2 * sum(log.(diag(kf.sqrtS))))
+struct SquareRootKalmanFilterUpdate{
+    T <: Number,
+    O <: AbstractObservationModel,
+    N <: AbstractWhiteNoiseModel
+} <: AbstractFilterUpdate
+    n::Int
+    m::Int
+    obs::O
+    noise::N
+    K::Matrix{T}
+    S::LowerTriangular{T}
+    U::Matrix{T}
+    z::Vector{T}
+    y::Vector{T}
+    cache::Matrix{T}
+    function SquareRootKalmanFilterUpdate{T}(
+        obs::O,
+        noise::N,
+        n_states::Int,
+        n_obs::Int
+    ) where {T, O, N}
+        return new{T, O, N}(
+            n_states,
+            n_obs,
+            obs,
+            noise,
+            zeros(T, n_states, n_obs),
+            LowerTriangular(Matrix{T}(I, n_obs, n_obs)),
+            zeros(T, n_states, n_obs),
+            zeros(T, n_obs),
+            zeros(T, n_obs),
+            zeros(T, n_obs, n_obs + n_states)
+        )
+    end
+end
+
+function update!(
+    est::SquareRootKalmanState{T},
+    kfu::SquareRootKalmanFilterUpdate,
+    z::AbstractVector{T};
+    u = missing,
+    kwargs...
+) where {T}
+    # Measurement prediction
+    observation!(kfu.obs, kfu.z, est.x; u = u, kwargs...)
+
+    n = kfu.n
+    m = kfu.m
+    H = jacobian(kfu.obs)
+    RL = cholesky(kfu.noise)
+
+    @inbounds begin
+        # Compute the innovation
+        kfu.y .= z .- kfu.z
+
+        # Innovation covariance cholesky factor
+        mul!(@views(kfu.cache[:, 1:n]), H, est.L)
+        copyto!(@views(kfu.cache[:, n+1:(n+m)]), RL)
+        _, R̃ = qr!(kfu.cache[:, 1:(n+m)]')
+        kfu.S .= LowerTriangular(R̃')
+
+        # Compute the Kalman gain
+        kfu.K .= ((est.L * (H * est.L)') / kfu.S') / kfu.S
+
+        # Update state estimate
+        est.x .+= kfu.K * kfu.y
+        # Covariance cholesky factor update
+        kfu.U .= kfu.K * RL
+        cholesky_downdate!(est.L, kfu.U)
+    end
+    nothing
+end
+
+const SquareRootKalmanFilter{T} = BaseKalmanFilter{
+    T,
+    SquareRootKalmanState{T},
+    SquareRootKalmanFilterPrediction{T, <:AbstractStateModel, <:AbstractWhiteNoiseModel},
+    SquareRootKalmanFilterUpdate{T, <:AbstractObservationModel, <:AbstractWhiteNoiseModel}
+}

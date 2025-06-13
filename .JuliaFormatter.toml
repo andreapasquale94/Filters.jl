@@ -1,0 +1,27 @@
+# General
+margin = 92                  # Soft line width limit
+indent = 4                   # Spaces for indentation (not 2!)
+trailing_comma = false        # Add trailing commas in multiline expressions
+always_for_in = true         # Use `for ... in ...` instead of `for ... = ...`
+
+# Function formatting
+short_to_long_function_def = true   # Convert one-liners to multiline defs
+align_function_arguments = true     # Align arguments in multiline function calls
+align_function_keywords = true      # Align keyword args too
+format_docstrings = true            # Format docstrings consistently
+
+# Wrapping behavior
+whitespace_typedefs = true          # Add space: `MyType <: AbstractType`
+wrap_long_lines = true              # Wrap long lines
+remove_extra_newlines = true        # Compact consecutive blank lines
+
+# Comments and spacing
+fix_docstring_newlines = true       # Clean up leading/trailing blank lines in docstrings
+annotate_untyped_fields_with_any = false  # Don't force `::Any` when missing
+
+# Edge case cleanup
+import_to_using = false             # Don’t auto-convert `import` to `using`
+pipe_to_function_call = false       # Don’t rewrite `|>` chains to nested calls
+
+# Misc
+format_markdown = true              # Format Markdown code blocks inside strings

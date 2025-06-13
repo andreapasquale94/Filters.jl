@@ -1,161 +1,147 @@
-"""
-    KalmanFilter{T}
+# ——————————————————————————————————————————————————————————————————————————————————————————
+# Base Kalman filter
+# ——————————————————————————————————————————————————————————————————————————————————————————
 
-Classic (linear) Kalman filter for estimating the state of a linear dynamical system
-with Gaussian noise.
-
-This filter maintains and updates the estimate of the hidden system state based on
-control inputs and noisy observations. It models the system using standard time-invariant
-Kalman filter equations:
-
-- **State transition**:  `xₖ = F*xₖ₋₁ + B*uₖ + wₖ`,  where `wₖ ∼ 𝒩(0, Qₖ)`
-- **Observation**:       `zₖ = H*xₖ + D*uₖ + vₖ`,    where `vₖ ∼ 𝒩(0, Rₖ)`
-
-### Fields
-
-#### Dimensions
-- `n` — Dimension of the state vector `x`.
-- `m` — Dimension of the measurement vector `z`.
-
-#### State estimate
-- `x` — Current estimate of the system state.
-- `P` — Current estimate of the error covariance of the state estimate.
-
-#### Model 
-- `F` — State transition matrix (maps state from previous to current step).
-- `B` — Control input matrix (maps control `u` to state). May be `nothing` if unused.
-- `Q` — Process noise covariance matrix.
-- `H` — Observation matrix (maps state to measurement space).
-- `D` — Control-to-measurement matrix. May be `nothing` if unused.
-- `R` — Observation noise covariance matrix.
-
-#### Diagnostics
-These fields store intermediate quantities from the *most recent measurement update* 
-(useful for debugging or adaptive filtering):
-
-- `z` — Predicted measurement.
-- `y` — Innovation (residual): `y = z - ̂z`.
-- `S` — Innovation covariance.
-- `K` — Kalman gain.
-
-"""
-struct KalmanFilter{T} <: AbstractKalmanFilter{T}
-    n::Int
-    m::Int
-    x::Vector{T}
-    P::Matrix{T}
-    F::Matrix{T}
-    B::Union{Matrix{T},Nothing}
-    Q::Matrix{T}
-    H::Matrix{T}
-    D::Union{Matrix{T},Nothing}
-    R::Matrix{T}
-    z::Vector{T}
-    y::Vector{T}
-    S::Matrix{T}
-    K::Matrix{T}
+struct BaseKalmanFilter{
+    T <: Number,
+    S <: AbstractStateEstimate,
+    P <: AbstractFilterPrediction,
+    U <: AbstractFilterUpdate
+} <: AbstractKalmanFilter{T}
+    est::S
+    pre::P
+    up::U
 end
 
-function KalmanFilter{T}(nx::Int, m::Int, x0, P0, F0, B0, Q0, H0, D0, R0) where {T}
-    z0 = zeros(T, m)
-    y0 = zeros(T, m)
-    S0 = Matrix{T}(I, m, m)
-    K0 = zeros(T, nx, m)
-    return KalmanFilter(
-        nx, m, copy(x0), copy(P0), F0, B0, Q0, H0, D0, R0, z0, y0, S0, K0
-    )
+@inline init!(kf::BaseKalmanFilter) = nothing
+
+function predict!(kf::BaseKalmanFilter{T}; u = missing, kwargs...) where {T}
+    predict!(kf.est, kf.pre; u = u, kwargs...)
 end
 
-# ==========================================================================================================
-
-@inline nstates(filter::KalmanFilter) = filter.n
-@inline nobs(filter::KalmanFilter) = filter.m
-@inline ncontrol(filter::KalmanFilter) = filter.B === nothing ? 0 : size(filter.B, 2)
-@inline islinear(filter::KalmanFilter) = true
-
-function Base.show(io::IO, kf::KalmanFilter{T}) where T
-    println(io, "KalmanFilter{$T}")
-    println(io, " x̂: ", estimate(kf))
-    println(io, " P: ", covariance(kf))
-    return
+function update!(
+    kf::BaseKalmanFilter{T},
+    z::AbstractVector{T};
+    u = missing,
+    kwargs...
+) where {T}
+    update!(kf.est, kf.up, z; u = u, kwargs...)
 end
 
-# ==========================================================================================================
-
-function predict!(kf::KalmanFilter{T}; u=nothing) where {T}
-    # 1. State prediction time update
-    if kf.B !== nothing && u !== nothing
-        kf.x .= kf.F * kf.x .+ kf.B * u
-    else
-        kf.x .= kf.F * kf.x
-    end
-    # 2. Covariance prediction time update
-    kf.P .= kf.F * kf.P * kf.F' .+ kf.Q
-    return nothing
-end
-
-function update!(kf::KalmanFilter{T}, z::AbstractVector{T}; u=nothing) where {T}
-    # 3. Measurement prediction
-    if kf.D !== nothing && u !== nothing
-        kf.z .= kf.H * kf.x .+ kf.D * u
-    else
-        kf.z .= kf.H * kf.x
-    end
-
-    # Compute the innovation
-    kf.y .= z .- kf.z
-    # Compute the innovation covariance
-    PHT = kf.P * kf.H'
-    kf.S .= kf.H * PHT .+ kf.R
-
-    # 4. Compute the Kalman gain
-    kf.K .= PHT / kf.S
-
-    # 5. State update
-    kf.x .+= kf.K * kf.y
-
-    # 6. Covariance update
-    IKH = I - kf.K * kf.H
-    kf.P .= IKH * kf.P * IKH' .+ kf.K * kf.R * kf.K'
-    return nothing
-end
-
-function update!(kf::KalmanFilter{T}, i::Int, z::Real; u=nothing) where T
-    Hi = view(kf.H, i, :)
-    Di = kf.D === nothing ? nothing : view(kf.D, i, :)
-    Ri = kf.R[i, i]
-
-    # Predicted measurement
-    zi = dot(Hi, kf.x)
-    if Di !== nothing && u !== nothing
-        zi += dot(Di, u)
-    end
-    kf.z[i] = zi
-    kf.y[i] = z - zi
-
-    # Innovation covariance
-    Si = dot(Hi, kf.P * Hi) + Ri
-    kf.S[i, i] = Si
-
-    # Kalman gain
-    kf.K[:, i] .= (kf.P * Hi) / Si
-    Ki = view(kf.K, :, i)
-
-    # State update
-    kf.x .+= Ki * kf.y[i]
-
-    # Covariance update
-    IKH = I - Ki * Hi'
-    kf.P .= IKH * kf.P * IKH' + Ki * Ri * Ki'
+function step!(
+    kf::BaseKalmanFilter{T},
+    z::AbstractVector{T};
+    uk = missing,
+    uk1 = missing,
+    kwargs...
+) where {T}
+    predict!(kf; u = uk, kwargs...)
+    update!(kf, z; u = uk1, kwargs...)
     nothing
 end
 
-@inline estimate(kf::KalmanFilter) = kf.x
-@inline covariance(kf::KalmanFilter) = kf.P
+@inline estimate(kf::BaseKalmanFilter) = kf.est
 
-function loglikelihood(kf::KalmanFilter{T}) where T
-    chol = cholesky(Hermitian(kf.S))
-    logdetS = 2sum(log, diag(chol.U))
-    yS = chol \ kf.y
-    return -0.5 * (kf.n * log(2π) + logdetS + dot(yS, yS))
+# ——————————————————————————————————————————————————————————————————————————————————————————
+# Time-constant Kalman filters 
+# ------------------------------------------------------------------------------------------
+
+struct KalmanFilterPrediction{
+    T <: Number,
+    S <: AbstractStateModel,
+    N <: AbstractWhiteNoiseModel
+} <: AbstractFilterPrediction
+    state::S
+    noise::N
+    function KalmanFilterPrediction{T}(state::S, noise::N) where {T, S, N}
+        return new{T, S, N}(state, noise)
+    end
 end
+
+function predict!(
+    est::KalmanState{T},
+    kfp::KalmanFilterPrediction;
+    u = missing,
+    kwargs...
+) where {T}
+    # State estimate time update
+    transition!(kfp.state, est.x, est.x; u = u, kwargs...)
+    # Prediction error covariance time update
+    Q = covariance(kfp.noise)
+    F = transition_matrix(kfp.state)
+    @inbounds est.P .= F * est.P * F' .+ Q
+    nothing
+end
+
+struct KalmanFilterUpdate{
+    T <: Number,
+    O <: AbstractObservationModel,
+    N <: AbstractWhiteNoiseModel
+} <: AbstractFilterUpdate
+    obs::O
+    noise::N
+    K::Matrix{T}
+    S::Matrix{T}
+    z::Vector{T}
+    y::Vector{T}
+    function KalmanFilterUpdate{T}(
+        obs::O,
+        noise::N,
+        n_states::Int,
+        n_obs::Int
+    ) where {T, O, N}
+        return new{T, O, N}(
+            obs,
+            noise,
+            zeros(T, n_states, n_obs),
+            zeros(T, n_obs, n_obs),
+            zeros(T, n_obs),
+            zeros(T, n_obs)
+        )
+    end
+end
+
+function update!(
+    est::KalmanState{T},
+    kfu::KalmanFilterUpdate{T, <:Any, <:Any},
+    z::AbstractVector{T};
+    u = missing,
+    kwargs...
+) where {T}
+    # Measurement prediction
+    observation!(kfu.obs, kfu.z, est.x; u = u, kwargs...)
+
+    @inbounds begin
+        # Compute the innovation
+        kfu.y .= z .- kfu.z
+
+        # Compute the innovation covariance
+        R = covariance(kfu.noise)
+        H = jacobian(kfu.obs)
+        PHT = est.P * H' # TODO: cache
+        kfu.S .= H * PHT .+ R
+
+        # Compute the Kalman gain
+        kfu.K .= PHT / kfu.S
+
+        # Update state estimate
+        est.x .+= kfu.K * kfu.y
+
+        # Update covariance estimate
+        IKH = I - kfu.K * H # TODO: cache
+        est.P .= IKH * est.P * IKH' .+ kfu.K * R * kfu.K'
+    end
+    nothing
+end
+
+"""
+    KalmanFilter{T}
+
+Implements a generic Kalman filter with a prediction and an update step.
+"""
+const KalmanFilter{T} = BaseKalmanFilter{
+    T,
+    KalmanState{T},
+    KalmanFilterPrediction{T, <:AbstractStateModel, <:AbstractWhiteNoiseModel},
+    KalmanFilterUpdate{T, <:AbstractObservationModel, <:AbstractWhiteNoiseModel}
+}
