@@ -92,4 +92,14 @@ include("particle/resample.jl")
 export BootstrapParticleFilter
 include("particle/bootstrap.jl")
 
+# ——————————————————————————————————————————————————————————————————————————————————————————
+# Information filters API
+# ------------------------------------------------------------------------------------------
+
+export InformationState
+include("information/state.jl")
+
+export InformationFilter
+include("information/if.jl")
+
 end

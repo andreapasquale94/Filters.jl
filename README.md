@@ -6,6 +6,7 @@ It provides a common interface and modular infrastructure to implement and compo
 filtering algorithms such as:
 
 - Kalman Filter (KF) - Fading Memory, Iterated (IKF) and Square-Root (SRKF)
+- Information Filter (IF)
 - Extended Kalman Filter (EKF)
 - Sigma-Point Kalman Filter (SPKF) - UKF and CDKF
 - Bootstrap Particle Filter (BPF)
