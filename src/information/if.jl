@@ -90,8 +90,8 @@ struct InformationFilterUpdate{
 end
 
 function update!(
-    est::InformationState{T},
     ifu::InformationFilterUpdate{T, <:Any, <:Any},
+    est::InformationState{T},
     z::AbstractVector{T};
     u = missing,
     θ = missing,
