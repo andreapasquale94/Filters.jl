@@ -64,4 +64,32 @@ include("kalman/ikf.jl")
 export FadingMemoryKalmanFilter
 include("kalman/fading.jl")
 
+# ——————————————————————————————————————————————————————————————————————————————————————————
+# Particle filters API
+# ------------------------------------------------------------------------------------------
+
+export ParticleState, normalize!, neffective
+include("particle/state.jl")
+
+export AbstractLikelihoodModel, likelihood
+include("particle/likelihood.jl")
+
+export AbstractParticleFilter
+include("particle/filter.jl")
+
+export AbstractParticleResampling, AbstractResamplingAlgorithm, AbstractResamplingPolicy
+export Resampling,
+    resample!,
+    trigger,
+    EffectiveSamplesPolicy,
+    NoResamplingAlgorithm,
+    SystematicResamplingAlgorithm,
+    MultinomialResamplingAlgorithm,
+    StratifiedResamplingAlgorithm
+#    ResidualResamplingAlgorithm, 
+include("particle/resample.jl")
+
+export BootstrapParticleFilter
+include("particle/bootstrap.jl")
+
 end
